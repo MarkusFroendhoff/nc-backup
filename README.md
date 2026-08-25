@@ -49,4 +49,7 @@ docs/                   Dokumentation
 
 ## Lizenz
 
-Open Source unter **GPL-3.0-or-later**. Website: https://plugins.froendhoff.com/nc-backup/
+Open Source unter **GPL-3.0-or-later**.  
+Website: https://plugins.froendhoff.com/nc-backup/  
+Quellcode: https://github.com/MarkusFroendhoff/nc-backup
+

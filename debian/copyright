@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: nc-backup
-Source: https://plugins.froendhoff.com/nc-backup/
+Source: https://github.com/MarkusFroendhoff/nc-backup
 
 Files: *
 Copyright: 2026 Markus Fröndhoff
