@@ -4,7 +4,7 @@ GUI-Backup für **Nextcloud** auf **Ubuntu/Debian** – **ARM64** (Raspberry Pi)
 
 ## Funktionen
 
-- Web-GUI (headless) + optionale GTK-GUI
+- Web-GUI (headless, Deutsch/Englisch) + optionale GTK-GUI
 - Stream-Verschlüsselung direkt auf Netzwerk/USB (ohne Server-Zwischenspeicher)
 - Inkrementelle Snapshots (rsync mit Hardlinks)
 - Master-Passwort, GPG-Verschlüsselung, Restore-Assistent
@@ -34,7 +34,7 @@ Status: `systemctl status nc-backup-web`
 Ausführliche Anleitung: [docs/INSTALL.md](docs/INSTALL.md)
 
 ```bash
-./install/make-release.sh          # nc-backup-1.4.1.tar.gz
+./install/make-release.sh          # nc-backup-1.5.0.tar.gz
 ./install/build-deb.sh amd64       # .deb bauen (Mac mit Docker)
 ```
 
