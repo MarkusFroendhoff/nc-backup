@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Nextcloud Backup
+Comment=Nextcloud-Daten und Datenbank sichern
+Exec=nc-backup
+Icon=folder-download
+Terminal=false
+Categories=Utility;System;
+Keywords=nextcloud;backup;sicherung;

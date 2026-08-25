@@ -1,0 +1,13 @@
+[Unit]
+Description=Nextcloud Backup (geplant)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/nc-backup-run
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

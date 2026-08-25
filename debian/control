@@ -1,0 +1,33 @@
+Source: nc-backup
+Section: utils
+Priority: optional
+Maintainer: Markus Fröndhoff <local@nc-backup>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               pybuild-plugin-pyproject,
+               python3-all,
+               python3-setuptools,
+               python3-bcrypt,
+               python3-flask,
+               python3-gi
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: nc-backup
+Architecture: all
+Depends: ${python3:Depends},
+         ${misc:Depends},
+         python3-gi,
+         gir1.2-gtk-3.0,
+         python3-bcrypt,
+         python3-flask,
+         rsync,
+         mariadb-client | mysql-client,
+         postgresql-client,
+         policykit-1,
+         gnupg
+Description: Nextcloud Backup mit grafischer Oberfläche
+ Sichert Nextcloud-Dateien und optional die Datenbank (MySQL/MariaDB,
+ PostgreSQL, SQLite). Unterstützt native und Docker-Installationen,
+ Stream-Verschlüsselung, inkrementelle Backups, Web-GUI und geplante
+ Backups per systemd-Timer. Läuft auf ARM64 (Raspberry Pi) und x86_64.

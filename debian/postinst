@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+case "${1}" in
+  configure)
+    groupadd -f nc-backup 2>/dev/null || true
+    install -d -m 775 -o root -g nc-backup /etc/nc-backup
+    install -d -m 755 -o root -g root /var/log/nc-backup
+
+    if [ -n "${SUDO_USER:-}" ]; then
+      usermod -aG nc-backup "${SUDO_USER}" 2>/dev/null || true
+    fi
+
+    if [ -d /run/systemd/system ] && [ -x /usr/lib/nc-backup/enable-web-service.sh ]; then
+      /usr/lib/nc-backup/enable-web-service.sh || true
+    fi
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0
