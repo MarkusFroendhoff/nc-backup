@@ -46,6 +46,11 @@ install -m 755 "${SCRIPT_DIR}/enable-web-service.sh" /usr/lib/nc-backup/enable-w
 echo "==> Benutzer zur Gruppe nc-backup hinzufügen: ${INSTALL_USER}"
 usermod -aG nc-backup "${INSTALL_USER}" || true
 
+echo "==> Nextcloud-App nach /usr/share/nc-backup"
+install -d -m 755 /usr/share/nc-backup
+rm -rf /usr/share/nc-backup/nextcloud-app
+cp -a "${PROJECT_DIR}/nextcloud-app" /usr/share/nc-backup/
+
 echo "==> Web-GUI als systemd-Dienst (Autostart nach Reboot)"
 install -m 755 "${SCRIPT_DIR}/enable-web-service.sh" /usr/lib/nc-backup/enable-web-service.sh
 install -m 644 "${SCRIPT_DIR}/nc-backup-web.service" /usr/lib/nc-backup/nc-backup-web.service

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from typing import Any
 
 from nc_backup.paths import SYSTEM_CONFIG_DIR, config_file, ensure_config_dir
@@ -33,6 +33,7 @@ class AppConfig:
     remove_plaintext_after_encrypt: bool = True
     backup_mode: str = "auto"  # auto | classic | stream_encrypted | incremental
     ui_language: str = "auto"  # auto | de | en
+    api_token_hash: str | None = None
     password_hash: str | None = None
     schedule: ScheduleConfig = field(default_factory=ScheduleConfig)
     setup_complete: bool = False
@@ -45,7 +46,9 @@ class AppConfig:
     def from_dict(cls, data: dict[str, Any]) -> AppConfig:
         schedule_data = data.pop("schedule", {})
         schedule = ScheduleConfig(**schedule_data) if schedule_data else ScheduleConfig()
-        return cls(schedule=schedule, **data)
+        known = {item.name for item in fields(cls) if item.name != "schedule"}
+        filtered = {key: value for key, value in data.items() if key in known}
+        return cls(schedule=schedule, **filtered)
 
 
 DEFAULT_NATIVE_PATHS = {

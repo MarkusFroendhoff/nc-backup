@@ -10,7 +10,7 @@ from pathlib import Path
 
 from flask import Flask, jsonify, redirect, render_template_string, request, session, url_for
 
-from nc_backup.auth import hash_password, verify_password
+from nc_backup.auth import hash_api_token, hash_password, verify_password
 from nc_backup.backup_engine import run_backup, setup_logging
 from nc_backup.config_store import AppConfig, config_needs_password, default_config_for_mode, load_config, save_config
 from nc_backup.docker_detect import detect_docker_installations
@@ -189,6 +189,12 @@ PAGE = """
           <label>{{ t('gpg_passphrase') }}</label>
           <input type="password" name="gpg_passphrase" placeholder="{{ t('gpg_passphrase_ph') }}">
         </div>
+        <div class="row">
+          <label>{{ t('api_token') }}</label>
+          <div class="hint">{{ t('api_token_status', status=api_token_status) }}</div>
+          <div class="hint">{{ t('api_token_hint')|safe }}</div>
+          <label><input type="checkbox" name="generate_api_token"> {{ t('api_token_generate') }}</label>
+        </div>
         <button type="submit">{{ t('save_settings') }}</button>
       </form>
     </div>
@@ -353,6 +359,7 @@ def _render(message: str = "", is_error: bool = False):
         targets=targets,
         lang=lang,
         t=t,
+        api_token_status=t("api_token_set") if cfg.api_token_hash else t("api_token_missing"),
     )
 
 
@@ -435,7 +442,13 @@ def save_settings_route():
     if cfg.encrypt_backups and cfg.gpg_mode == "recipient" and not cfg.gpg_recipient:
         return _render(t("err_gpg_recipient"), True)
     save_config(cfg)
-    return _render(t("ok_settings"))
+    extra = t("ok_settings")
+    if request.form.get("generate_api_token"):
+        raw_token = secrets.token_urlsafe(32)
+        cfg.api_token_hash = hash_api_token(raw_token)
+        save_config(cfg)
+        extra = t("ok_api_token", token=raw_token)
+    return _render(extra)
 
 
 @app.post("/detect-paths")
@@ -592,6 +605,11 @@ def run_restore_route():
     if result.success:
         return _render(result.message)
     return _render(t("err_restore", message=result.message, errors="; ".join(result.errors)), True)
+
+
+from nc_backup.web.api_v1 import register_api_v1
+
+register_api_v1(app)
 
 
 def main() -> int:

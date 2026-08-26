@@ -12,6 +12,8 @@ override_dh_auto_install:
 	install -D -m 755 install/apply-schedule.sh debian/nc-backup/usr/lib/nc-backup/apply-schedule.sh
 	install -D -m 755 install/enable-web-service.sh debian/nc-backup/usr/lib/nc-backup/enable-web-service.sh
 	install -D -m 644 install/nc-backup-web.service debian/nc-backup/usr/lib/nc-backup/nc-backup-web.service
+	mkdir -p debian/nc-backup/usr/share/nc-backup
+	cp -a nextcloud-app debian/nc-backup/usr/share/nc-backup/
 
 override_dh_installsystemd:
 	dh_installsystemd --no-start

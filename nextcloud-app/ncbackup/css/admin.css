@@ -1,0 +1,11 @@
+#ncbackup-admin input[type="url"],
+#ncbackup-admin input[type="text"] {
+	width: 100%;
+	max-width: 36em;
+	display: block;
+	margin: 0.25em 0 0.75em;
+}
+
+#ncbackup-save-status {
+	min-height: 1.2em;
+}

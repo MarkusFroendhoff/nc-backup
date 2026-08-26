@@ -12,6 +12,11 @@ class I18nTests(unittest.TestCase):
     def test_english(self) -> None:
         self.assertEqual(Translator("en")("backup_now"), "Start backup now")
 
+    def test_key_parity(self) -> None:
+        from nc_backup.i18n import TRANSLATIONS
+
+        self.assertEqual(set(TRANSLATIONS["de"]), set(TRANSLATIONS["en"]))
+
     def test_browser_lang(self) -> None:
         self.assertEqual(detect_browser_lang("en-US,en;q=0.9"), "en")
         self.assertEqual(detect_browser_lang("de-DE,de;q=0.9"), "de")

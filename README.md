@@ -42,6 +42,7 @@ Ausführliche Anleitung: [docs/INSTALL.md](docs/INSTALL.md)
 
 ```
 src/nc_backup/          Python-Paket
+nextcloud-app/ncbackup  Nextcloud-App (eigene Oberfläche + Token in Einstellungen)
 install/                install.sh, systemd, .deb-Build
 debian/                 Debian-Paketierung (Architecture: all)
 docs/                   Dokumentation
