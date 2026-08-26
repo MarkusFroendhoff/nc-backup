@@ -1,3 +1,13 @@
+nc-backup (1.7.0-1) noble; urgency=medium
+
+  * Version 1.7.0 (aktueller Stand)
+  * Nextcloud-App ncbackup: eigene Oberfläche zum Backup starten
+  * API-Token nur in den Nextcloud-Admin-Einstellungen
+  * REST-API zum Starten einer Sicherung sowie Status und Ziele
+  * Installationsanleitung für die App (nicht im App Store)
+
+ -- Markus Fröndhoff <local@nc-backup>  Wed, 26 Aug 2026 13:50:00 +0200
+
 nc-backup (1.5.0-1) noble; urgency=medium
 
   * Web-GUI bilingual (German / English)

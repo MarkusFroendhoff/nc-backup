@@ -35,7 +35,7 @@ Status: `systemctl status nc-backup-web`
 Ausführliche Anleitung: [docs/INSTALL.md](docs/INSTALL.md)
 
 ```bash
-./install/make-release.sh          # nc-backup-1.5.0.tar.gz
+./install/make-release.sh          # nc-backup-1.7.0.tar.gz
 ./install/build-deb.sh amd64       # .deb bauen (Mac mit Docker)
 ```
 
