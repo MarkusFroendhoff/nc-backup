@@ -1,6 +1,6 @@
 # NC Backup (Nextcloud-App)
 
-Zwei getrennte Stellen:
+Die App ist **nicht** im Nextcloud-App-Store. Nextcloud lädt sie nur, wenn der Ordner im echten `apps/`-Verzeichnis liegt, `www-data` gehört und per `occ` aktiviert wird.
 
 | Wo | Was |
 |----|-----|
@@ -9,46 +9,61 @@ Zwei getrennte Stellen:
 
 Wiederherstellung bleibt in der nc-backup-Web-GUI.
 
-## Auf dem Pi aktualisieren (bestehende 1.7.0-Installation)
-
-App ersetzen:
+## 1. App holen
 
 ```bash
-SRC=~/nc-backup/nextcloud-app/ncbackup
-sudo rm -rf /var/www/nextcloud/apps/ncbackup
-sudo cp -a "$SRC" /var/www/nextcloud/apps/ncbackup
-sudo chown -R www-data:www-data /var/www/nextcloud/apps/ncbackup
-sudo -u www-data php /var/www/nextcloud/occ app:enable --force ncbackup
+cd /tmp
+git clone --depth 1 https://github.com/MarkusFroendhoff/nc-backup.git
+ls /tmp/nc-backup/nextcloud-app/ncbackup/appinfo/info.xml
 ```
 
-nc-backup-API (Ziele + Token) nachziehen, **ohne** das Python-Paket komplett neu zu installieren:
+Nach `install.sh` oft auch unter `/usr/share/nc-backup/nextcloud-app/ncbackup`. Der Ordner **muss** `ncbackup` heißen.
+
+## 2. Nextcloud-Pfad
 
 ```bash
-cd ~/nc-backup
-SITE=$(python3 -c "import nc_backup, pathlib; print(pathlib.Path(nc_backup.__file__).parent)")
-sudo cp src/nc_backup/web/api_v1.py "$SITE/web/api_v1.py"
-sudo python3 - <<'PY'
-from pathlib import Path
-import nc_backup.web.app as m
-p = Path(m.__file__)
-text = p.read_text(encoding="utf-8")
-needle = "from nc_backup.web.api_v1 import register_api_v1"
-if needle not in text:
-    text += "\nfrom nc_backup.web.api_v1 import register_api_v1\nregister_api_v1(app)\n"
-    p.write_text(text, encoding="utf-8")
-print("patched", p)
-PY
-sudo systemctl restart nc-backup-web
+sudo find /var/www /opt /srv -name occ 2>/dev/null | head
 ```
 
-Token erzeugen: Web-GUI `http://192.168.178.4:42173` → Einstellungen → **Neues API-Token erzeugen**.
+Nativ häufig: `/var/www/nextcloud/occ` → Ziel `/var/www/nextcloud/apps/ncbackup`.
 
-In Nextcloud: **Einstellungen → NC Backup** → Token einfügen → speichern.
+## 3. Kopieren und aktivieren (nativ)
 
-Dann oben auf **NC Backup** klicken, Ziel wählen, starten.
+```bash
+NC=/var/www/nextcloud
+SRC=/tmp/nc-backup/nextcloud-app/ncbackup
 
-Falls Nextcloud lokale URLs blockiert:
+sudo rm -rf "$NC/apps/ncbackup"
+sudo cp -a "$SRC" "$NC/apps/ncbackup"
+sudo chown -R www-data:www-data "$NC/apps/ncbackup"
+
+sudo -u www-data php "$NC/occ" app:enable ncbackup
+# bei „nicht kompatibel“:
+sudo -u www-data php "$NC/occ" app:enable --force ncbackup
+sudo -u www-data php "$NC/occ" app:list | grep ncbackup
+```
+
+**Docker:** in das gemountete `apps`-Volume kopieren, dann `docker exec -u www-data KONTAINER php occ app:enable --force ncbackup`. URL nicht `127.0.0.1` (das ist der Container) – LAN-IP oder `http://172.17.0.1:42173`.
+
+## 4. Token
+
+1. Web-GUI `http://SERVER-IP:42173` → Einstellungen → **Neues API-Token erzeugen** (nur einmal sichtbar).
+2. Nextcloud → **Einstellungen → Verwaltung → NC Backup**
+3. Nativ gleicher Rechner: `http://127.0.0.1:42173` + Token → speichern.
+4. Oben **NC Backup** → Ziel → starten.
+
+Lokale URLs von Nextcloud blockiert:
 
 ```bash
 sudo -u www-data php /var/www/nextcloud/occ config:system:set allow_local_remote_servers --value=true --type=boolean
 ```
+
+## Typische Fehler
+
+| Symptom | Lösung |
+|---------|--------|
+| Nicht im Store | Normal – manuell kopieren + `occ` |
+| nicht kompatibel | `occ app:enable --force ncbackup` |
+| CSRF / Zugriff verboten | aktuelle App von GitHub |
+| nicht erreichbar | Dienst, URL (Docker!), `allow_local_remote_servers` |
+| Token ungültig | neu erzeugen und in den Einstellungen speichern |

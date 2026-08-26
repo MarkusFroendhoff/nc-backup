@@ -12,6 +12,7 @@ GUI-Backup für **Nextcloud** auf **Ubuntu/Debian** – **ARM64** (Raspberry Pi)
 - Datenbank-Dump: MariaDB/MySQL, PostgreSQL, SQLite
 - Geplante Backups per systemd-Timer
 - **Autostart der Web-GUI nach Reboot** (systemd)
+- Optional: **Nextcloud-App** – eigene Oberfläche zum Backup starten, API-Token nur in den Einstellungen
 
 ## Schnellstart
 

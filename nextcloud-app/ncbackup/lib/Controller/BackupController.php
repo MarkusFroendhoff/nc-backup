@@ -36,6 +36,10 @@ class BackupController extends Controller {
 		}
 	}
 
+	/**
+	 * @NoCSRFRequired
+	 */
+	#[NoCSRFRequired]
 	public function status(): DataResponse {
 		if (!$this->isAdmin()) {
 			return new DataResponse(['ok' => false, 'message' => 'Admins only.'], 403);
@@ -47,6 +51,10 @@ class BackupController extends Controller {
 		}
 	}
 
+	/**
+	 * @NoCSRFRequired
+	 */
+	#[NoCSRFRequired]
 	public function targets(): DataResponse {
 		if (!$this->isAdmin()) {
 			return new DataResponse(['ok' => false, 'message' => 'Admins only.'], 403);
