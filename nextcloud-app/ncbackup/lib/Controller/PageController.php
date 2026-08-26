@@ -6,6 +6,7 @@ namespace OCA\NcBackup\Controller;
 
 use OCA\NcBackup\Service\BackupClient;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -25,6 +26,10 @@ class PageController extends Controller {
 		parent::__construct($appName, $request);
 	}
 
+	/**
+	 * @NoCSRFRequired
+	 */
+	#[NoCSRFRequired]
 	public function index(): TemplateResponse {
 		Util::addScript('ncbackup', 'app');
 		Util::addStyle('ncbackup', 'app');

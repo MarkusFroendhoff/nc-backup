@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			requesttoken: OC.requestToken,
 			'Content-Type': 'application/json',
 			Accept: 'application/json',
+			'X-Requested-With': 'XMLHttpRequest',
 		};
 	}
 

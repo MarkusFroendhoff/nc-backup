@@ -6,6 +6,7 @@ namespace OCA\NcBackup\Controller;
 
 use OCA\NcBackup\Service\BackupClient;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
