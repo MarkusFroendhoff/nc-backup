@@ -1,21 +1,31 @@
+/* Scrollbar-freundlich in Nextcloud-App-Inhalt */
 .ncbackup-wrap {
+	box-sizing: border-box;
 	max-width: 44em;
-	margin: 2em auto;
-	padding: 0 1.5em 2em;
+	margin: 0 auto;
+	padding: 1.25em 1.5em 4em;
+	width: 100%;
+	overflow: visible;
 }
 
 .ncbackup-header h2 {
-	margin-bottom: 0.25em;
+	margin: 0 0 0.35em;
 }
 
 .ncbackup-section {
-	margin: 1.5em 0;
-	padding-top: 0.5em;
+	margin: 1.25em 0;
+	padding-top: 0.75em;
 	border-top: 1px solid var(--color-border);
 }
 
+.ncbackup-run {
+	border-top: none;
+	padding-top: 0;
+	margin-top: 0.5em;
+}
+
 .ncbackup-section h3 {
-	margin: 0.5em 0;
+	margin: 0 0 0.5em;
 	font-size: 1.05em;
 }
 
@@ -51,7 +61,7 @@
 }
 
 .ncbackup-check {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
 	gap: 0.5em;
 }
@@ -61,13 +71,37 @@
 .ncbackup-wrap select {
 	width: 100%;
 	max-width: 28em;
+	min-height: 2.5em;
+	box-sizing: border-box;
+}
+
+.ncbackup-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75em;
+	align-items: center;
+	margin: 0.75em 0 1em;
+}
+
+.ncbackup-wrap button {
+	min-height: 2.75em;
+	padding: 0.55em 1.1em;
+	line-height: 1.25;
+	white-space: normal;
+	width: auto;
+	max-width: 100%;
+}
+
+#ncbackup-start {
+	min-width: 12em;
+	font-weight: 600;
 }
 
 .ncbackup-progress {
 	background: var(--color-background-dark);
 	border-radius: var(--border-radius);
 	height: 10px;
-	margin: 1em 0;
+	margin: 0.5em 0 0.75em;
 	overflow: hidden;
 }
 
@@ -78,10 +112,14 @@
 	transition: width 0.25s;
 }
 
+.ncbackup-log,
 #ncbackup-log {
 	background: var(--color-background-dark);
 	border-radius: var(--border-radius);
-	min-height: 6em;
+	min-height: 4em;
+	max-height: 14em;
+	overflow: auto;
 	padding: 0.75em;
 	white-space: pre-wrap;
+	margin: 0 0 0.5em;
 }
