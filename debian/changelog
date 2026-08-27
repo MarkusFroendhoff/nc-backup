@@ -1,3 +1,11 @@
+nc-backup (1.7.1-1) noble; urgency=medium
+
+  * Patch: geplanter systemd-Job findet nc-backup-run (203/EXEC)
+  * ExecStart über PATH (/usr/local/bin), nicht fest /usr/bin
+  * Installation schreibt die Timer-Unit neu; Web-GUI startet weiter beim Boot
+
+ -- Markus Fröndhoff <local@nc-backup>  Thu, 27 Aug 2026 11:55:00 +0200
+
 nc-backup (1.7.0-1) noble; urgency=medium
 
   * Version 1.7.0 (aktueller Stand)

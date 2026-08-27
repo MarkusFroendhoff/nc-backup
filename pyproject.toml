@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nc-backup"
-version = "1.7.0"
+version = "1.7.1"
 description = "Nextcloud Backup mit GUI für Ubuntu ARM64 (Raspberry Pi)"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -8,8 +8,8 @@ Nextcloud nativ oder per Docker.
 ## Variante A: Installationsskript (empfohlen für Quellcode)
 
 ```bash
-tar -xzf nc-backup-1.7.0.tar.gz
-cd nc-backup-1.7.0
+tar -xzf nc-backup-1.7.1.tar.gz
+cd nc-backup-1.7.1
 chmod +x install/install.sh
 sudo ./install/install.sh
 ```
@@ -45,7 +45,7 @@ Das Paket ist **`Architecture: all`** – **ein** `.deb` funktioniert auf Pi **u
 
 ```bash
 sudo apt install devscripts debhelper dh-python
-cd nc-backup-1.7.0
+cd nc-backup-1.7.1
 debuild -us -uc -b
 ```
 
@@ -60,13 +60,13 @@ chmod +x install/build-deb.sh install/make-release.sh
 
 ```bash
 ./install/make-release.sh
-# → ../nc-backup-1.7.0.tar.gz
+# → ../nc-backup-1.7.1.tar.gz
 ```
 
 ### Paket installieren
 
 ```bash
-sudo dpkg -i nc-backup_1.7.0-1_all.deb
+sudo dpkg -i nc-backup_1.7.1-1_all.deb
 sudo apt -f install
 ```
 
@@ -89,7 +89,7 @@ Einstellungen in `/etc/nc-backup/` bleiben erhalten.
 **Debian-Paket:**
 
 ```bash
-sudo dpkg -i nc-backup_1.7.0-1_all.deb
+sudo dpkg -i nc-backup_1.7.1-1_all.deb
 sudo apt -f install
 sudo systemctl restart nc-backup-web
 ```
@@ -105,7 +105,7 @@ Prüfen:
 
 ```bash
 pip3 show nc-backup | grep Version
-# Erwartung: Version: 1.7.0
+# Erwartung: Version: 1.7.1
 systemctl status nc-backup-web
 ```
 

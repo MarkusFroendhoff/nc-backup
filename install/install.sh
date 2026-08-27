@@ -56,6 +56,11 @@ install -m 755 "${SCRIPT_DIR}/enable-web-service.sh" /usr/lib/nc-backup/enable-w
 install -m 644 "${SCRIPT_DIR}/nc-backup-web.service" /usr/lib/nc-backup/nc-backup-web.service
 "${SCRIPT_DIR}/enable-web-service.sh" || true
 
+echo "==> Geplanten systemd-Job auf den echten nc-backup-run-Pfad bringen"
+if command -v nc-backup-run >/dev/null 2>&1; then
+  nc-backup-run --apply-schedule || true
+fi
+
 echo
 echo "Installation abgeschlossen."
 echo "Web-GUI:  http://$(hostname -I | awk '{print $1}'):42173"

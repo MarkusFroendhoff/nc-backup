@@ -17,6 +17,9 @@ case "${1}" in
       if [ -x /usr/lib/nc-backup/enable-web-service.sh ]; then
         /usr/lib/nc-backup/enable-web-service.sh || true
       fi
+      if command -v nc-backup-run >/dev/null 2>&1; then
+        nc-backup-run --apply-schedule >/dev/null 2>&1 || true
+      fi
     fi
     ;;
 esac
