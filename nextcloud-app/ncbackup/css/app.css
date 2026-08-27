@@ -1,32 +1,57 @@
-/* Scrollbar-freundlich in Nextcloud-App-Inhalt */
+/* Nextcloud 28–34: App-Inhalt muss selbst scrollen dürfen */
+#content.app-ncbackup,
+#content-vue.app-ncbackup,
+.app-ncbackup #app-content,
+.app-ncbackup #app-content-vue,
+.app-ncbackup .app-content,
+body.noscroll #content.app-ncbackup {
+	overflow-y: auto !important;
+	overflow-x: hidden !important;
+	height: auto !important;
+	max-height: calc(100dvh - var(--header-height, 50px)) !important;
+	-webkit-overflow-scrolling: touch;
+}
+
 .ncbackup-wrap {
 	box-sizing: border-box;
-	max-width: 44em;
-	margin: 0 auto;
-	padding: 1.25em 1.5em 4em;
 	width: 100%;
+	max-width: 48em;
+	margin: 1em auto 3em;
+	padding: 0 1em;
 	overflow: visible;
+}
+
+.ncbackup-panel {
+	box-sizing: border-box;
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	border-radius: var(--border-radius-large, 12px);
+	padding: 1.35em 1.5em 2em;
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+	border: 1px solid var(--color-border);
 }
 
 .ncbackup-header h2 {
 	margin: 0 0 0.35em;
+	color: var(--color-main-text);
 }
 
 .ncbackup-section {
-	margin: 1.25em 0;
-	padding-top: 0.75em;
+	margin: 1.25em 0 0;
+	padding-top: 0.9em;
 	border-top: 1px solid var(--color-border);
 }
 
 .ncbackup-run {
 	border-top: none;
-	padding-top: 0;
-	margin-top: 0.5em;
+	padding-top: 0.25em;
+	margin-top: 0.35em;
 }
 
 .ncbackup-section h3 {
 	margin: 0 0 0.5em;
 	font-size: 1.05em;
+	color: var(--color-main-text);
 }
 
 .ncbackup-lead {
@@ -56,8 +81,9 @@
 }
 
 .ncbackup-row select {
-	flex: 1;
-	min-width: 12em;
+	flex: 1 1 100%;
+	min-width: 0;
+	max-width: 100%;
 }
 
 .ncbackup-check {
@@ -70,7 +96,7 @@
 .ncbackup-wrap input[type="time"],
 .ncbackup-wrap select {
 	width: 100%;
-	max-width: 28em;
+	max-width: 100%;
 	min-height: 2.5em;
 	box-sizing: border-box;
 }
@@ -115,9 +141,10 @@
 .ncbackup-log,
 #ncbackup-log {
 	background: var(--color-background-dark);
+	color: var(--color-main-text);
 	border-radius: var(--border-radius);
 	min-height: 4em;
-	max-height: 14em;
+	max-height: 12em;
 	overflow: auto;
 	padding: 0.75em;
 	white-space: pre-wrap;

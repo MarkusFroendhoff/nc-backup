@@ -1,4 +1,31 @@
 document.addEventListener('DOMContentLoaded', function () {
+	// Nextcloud content area often has overflow:hidden — enable scrolling for this app.
+	(function enableAppScroll() {
+		const root = document.getElementById('ncbackup-app');
+		if (!root) {
+			return;
+		}
+		let node = root.parentElement;
+		while (node && node !== document.body) {
+			const id = node.id || '';
+			const cls = node.className || '';
+			if (
+				id === 'content' ||
+				id === 'content-vue' ||
+				id === 'app-content' ||
+				id === 'app-content-vue' ||
+				(typeof cls === 'string' && (cls.indexOf('app-content') !== -1 || cls.indexOf('app-ncbackup') !== -1))
+			) {
+				node.style.setProperty('overflow-y', 'auto', 'important');
+				node.style.setProperty('overflow-x', 'hidden', 'important');
+				node.style.setProperty('max-height', 'calc(100dvh - var(--header-height, 50px))', 'important');
+			}
+			node = node.parentElement;
+		}
+		document.documentElement.style.overflowY = 'auto';
+		document.body.style.overflowY = 'auto';
+	})();
+
 	const startBtn = document.getElementById('ncbackup-start');
 	const refreshBtn = document.getElementById('ncbackup-refresh');
 	const saveDestBtn = document.getElementById('ncbackup-save-dest');

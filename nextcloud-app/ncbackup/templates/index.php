@@ -5,7 +5,8 @@ declare(strict_types=1);
 /** @var \OCP\IL10N $l */
 /** @var array $_ */
 ?>
-<div id="ncbackup-app" class="ncbackup-wrap section">
+<div id="ncbackup-app" class="ncbackup-wrap">
+	<div class="ncbackup-panel">
 	<?php if (empty($_['is_admin'])): ?>
 		<p><?php p($l->t('Only administrators can start backups.')); ?></p>
 	<?php else: ?>
@@ -77,4 +78,5 @@ declare(strict_types=1);
 			</p>
 		</section>
 	<?php endif; ?>
+	</div>
 </div>
