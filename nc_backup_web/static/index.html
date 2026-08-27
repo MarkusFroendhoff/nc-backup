@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NC Backup</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="brand-mark" aria-hidden="true">NC</div>
+      <h1>NC Backup</h1>
+      <p class="lede">Bitte den Zugangsschlüssel eingeben, um fortzufahren.</p>
+      <form id="login-form" autocomplete="off">
+        <label for="login-key">Zugangsschlüssel <span class="pflicht">Pflicht</span></label>
+        <input id="login-key" name="token" type="password" required minlength="4"
+               placeholder="Schlüssel einfügen" autocomplete="current-password">
+        <p class="hint">
+          Der Schlüssel muss Groß- und Kleinbuchstaben, Zahlen und ein Sonderzeichen enthalten.
+          Nach der Installation steht er in <code>/etc/nc-backup/web-token</code>.
+        </p>
+        <p id="login-error" class="error" hidden></p>
+        <button type="submit" class="btn btn-primary btn-block">Anmelden</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="app" class="app" hidden>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-mark sm">NC</span>
+        <div>
+          <strong>NC Backup</strong>
+          <span>Nextcloud sichern</span>
+        </div>
+      </div>
+      <nav class="nav">
+        <button type="button" data-page="overview" class="active">Übersicht</button>
+        <button type="button" data-page="setup">Einrichtung</button>
+        <button type="button" data-page="dest">Ziel</button>
+        <button type="button" data-page="schedule">Zeitplan</button>
+        <button type="button" data-page="restore">Wiederherstellung</button>
+        <button type="button" data-page="log">Protokoll</button>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="badge-ok">Zugangsschlüssel aktiv</span>
+        <button type="button" id="btn-logout" class="linkish">Abmelden</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <h1 id="page-title">Übersicht</h1>
+      </header>
+      <div class="content">
+
+        <section id="page-overview" class="page">
+          <div class="cards">
+            <article class="card">
+              <h2>Status</h2>
+              <p id="ov-status" class="status-pill">—</p>
+              <p id="ov-nc" class="muted"></p>
+            </article>
+            <article class="card">
+              <h2>Letzte Sicherung</h2>
+              <p id="ov-last" class="big">Noch keine</p>
+              <p id="ov-last-id" class="muted"></p>
+            </article>
+            <article class="card">
+              <h2>Ziel</h2>
+              <p id="ov-dest" class="big">Noch nicht eingerichtet</p>
+              <p id="ov-sched" class="muted"></p>
+            </article>
+          </div>
+          <div class="toolbar">
+            <button type="button" id="btn-backup" class="btn btn-primary">Jetzt sichern</button>
+            <span id="ov-job" class="muted"></span>
+          </div>
+          <article class="card">
+            <h2>Letzte Meldungen</h2>
+            <pre id="ov-log" class="log-box"></pre>
+          </article>
+        </section>
+
+        <section id="page-setup" class="page" hidden>
+          <article class="card">
+            <h2>Einrichtung</h2>
+            <p class="muted">In wenigen Schritten ist die Sicherung eingerichtet. Nextcloud wird automatisch gesucht.</p>
+            <ol class="steps" id="wizard-steps">
+              <li class="on">Nextcloud</li>
+              <li>Ziel</li>
+              <li>Kennwort</li>
+              <li>Zeit</li>
+            </ol>
+
+            <div id="wiz-1" class="wiz">
+              <p id="wiz-nc" class="status-line">Suche nach Nextcloud …</p>
+              <button type="button" id="btn-detect" class="btn">Erneut suchen</button>
+            </div>
+            <div id="wiz-2" class="wiz" hidden>
+              <p>Wohin sollen die Sicherungen?</p>
+              <div class="choice-grid" id="wiz-provider">
+                <label class="choice"><input type="radio" name="wprov" value="local" checked> Dieser Computer</label>
+                <label class="choice"><input type="radio" name="wprov" value="sftp"> Anderer Rechner (SFTP)</label>
+                <label class="choice"><input type="radio" name="wprov" value="s3"> Online-Speicher (S3)</label>
+                <label class="choice"><input type="radio" name="wprov" value="webdav"> WebDAV</label>
+              </div>
+              <div id="wiz-fields"></div>
+            </div>
+            <div id="wiz-3" class="wiz" hidden>
+              <p>Die Sicherungen werden verschlüsselt. Dieses Kennwort wird <strong>nur einmal</strong> angezeigt — bitte notieren.</p>
+              <label for="wiz-restic">Sicherungskennwort <span class="pflicht">Pflicht</span></label>
+              <div class="row">
+                <input id="wiz-restic" type="text" spellcheck="false">
+                <button type="button" id="btn-regen-pw" class="btn">Neu erzeugen</button>
+              </div>
+              <p class="hint">Muss Groß- und Kleinbuchstaben, Zahlen und ein Sonderzeichen enthalten.</p>
+              <p id="wiz-pw-err" class="error" hidden></p>
+            </div>
+            <div id="wiz-4" class="wiz" hidden>
+              <label for="wiz-time">Täglich sichern um</label>
+              <input id="wiz-time" type="time" value="02:30">
+              <label class="check"><input id="wiz-enable" type="checkbox" checked> Automatische Sicherung einschalten</label>
+            </div>
+            <p id="wiz-msg" class="ok" hidden></p>
+            <p id="wiz-err" class="error" hidden></p>
+            <div class="toolbar">
+              <button type="button" id="wiz-back" class="btn" hidden>Zurück</button>
+              <button type="button" id="wiz-next" class="btn btn-primary">Weiter</button>
+            </div>
+          </article>
+        </section>
+
+        <section id="page-dest" class="page" hidden>
+          <article class="card">
+            <h2>Ziel</h2>
+            <p class="muted">Wo die verschlüsselten Sicherungen liegen sollen.</p>
+            <label for="dest-provider">Speicherort</label>
+            <select id="dest-provider">
+              <option value="local">Dieser Computer</option>
+              <option value="sftp">Anderer Rechner (SFTP)</option>
+              <option value="s3">Online-Speicher (S3)</option>
+              <option value="webdav">WebDAV</option>
+              <option value="azure">Azure</option>
+              <option value="b2">Backblaze B2</option>
+              <option value="rclone">Rclone</option>
+            </select>
+            <div id="dest-fields"></div>
+            <label for="dest-restic">Sicherungskennwort ändern (leer lassen = behalten)</label>
+            <input id="dest-restic" type="password" autocomplete="new-password" placeholder="Nur ausfüllen, um es zu ersetzen">
+            <p id="dest-msg" class="ok" hidden></p>
+            <p id="dest-err" class="error" hidden></p>
+            <button type="button" id="btn-save-dest" class="btn btn-primary">Speichern</button>
+          </article>
+        </section>
+
+        <section id="page-schedule" class="page" hidden>
+          <article class="card">
+            <h2>Zeitplan</h2>
+            <p class="muted">NC Backup kann Nextcloud jeden Tag automatisch sichern.</p>
+            <label class="check"><input id="sched-enabled" type="checkbox"> Täglich automatisch sichern</label>
+            <label for="sched-time">Uhrzeit</label>
+            <input id="sched-time" type="time" value="02:30">
+            <p id="sched-msg" class="ok" hidden></p>
+            <p id="sched-err" class="error" hidden></p>
+            <button type="button" id="btn-save-sched" class="btn btn-primary">Zeitplan speichern</button>
+          </article>
+        </section>
+
+        <section id="page-restore" class="page" hidden>
+          <article class="card">
+            <h2>Wiederherstellung</h2>
+            <p class="warn-banner">Achtung: Wiederherstellung überschreibt bestehende Daten. Vorher prüfen, dass die richtige Sicherung gewählt ist.</p>
+            <button type="button" id="btn-load-snaps" class="btn">Sicherungspunkte laden</button>
+            <ul id="snap-list" class="snap-list"></ul>
+            <label class="check"><input id="rst-db" type="checkbox" checked> Datenbank wiederherstellen</label>
+            <label class="check"><input id="rst-cfg" type="checkbox" checked> Nextcloud-Einstellungen wiederherstellen</label>
+            <label class="check"><input id="rst-data" type="checkbox"> Dateien wiederherstellen (überschreibt Nutzerdateien)</label>
+            <p id="rst-msg" class="ok" hidden></p>
+            <p id="rst-err" class="error" hidden></p>
+            <button type="button" id="btn-restore" class="btn btn-danger">Wiederherstellen …</button>
+          </article>
+        </section>
+
+        <section id="page-log" class="page" hidden>
+          <article class="card">
+            <h2>Protokoll</h2>
+            <button type="button" id="btn-refresh-log" class="btn">Aktualisieren</button>
+            <pre id="log-full" class="log-box tall"></pre>
+          </article>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <dialog id="confirm-dlg">
+    <form method="dialog" class="dlg">
+      <h2>Wirklich wiederherstellen?</h2>
+      <p>Bestehende Nextcloud-Daten können überschrieben werden. Dieser Schritt lässt sich nicht rückgängig machen.</p>
+      <div class="toolbar">
+        <button value="cancel" class="btn">Abbrechen</button>
+        <button value="ok" class="btn btn-danger">Ja, wiederherstellen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

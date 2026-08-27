@@ -1,22 +1,20 @@
-config/nc-backup.conf
-config/config.json
-secrets.json
-**/secrets.json
-*.log
-backups/
-.DS_Store
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
+.venv/
 dist/
 build/
-debian/files
-debian/*.debhelper
-debian/*.substvars
-debian/nc-backup/
-../nc-backup_*.deb
-../nc-backup_*.changes
-../nc-backup_*.buildinfo
 
-# Produktseite nur lokal / FileZilla, nicht auf GitHub
-website/
+# Lokale Konfiguration mit Zugangsdaten
+config/backup.env
+config/backup.env.local
+
+# Backup-Artefakte (lokal getestet)
+backups/
+*.sql.gz
+*.tar.gz
+*.tar.zst
+
+# macOS
+.DS_Store

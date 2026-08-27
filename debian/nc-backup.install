@@ -1,0 +1,6 @@
+config/config.example.yaml etc/nc-backup/
+share/applications/de.ncbackup.NcBackup.desktop usr/share/applications/
+share/polkit-1/actions/de.ncbackup.policy usr/share/polkit-1/actions/
+systemd/nc-backup.service etc/systemd/system/
+systemd/nc-backup.timer etc/systemd/system/
+systemd/nc-backup-web.service etc/systemd/system/

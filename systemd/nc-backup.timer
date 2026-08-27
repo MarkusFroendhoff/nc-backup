@@ -1,0 +1,11 @@
+[Unit]
+Description=NC Backup — geplanter Nextcloud-Backup-Lauf
+Documentation=file:///usr/share/doc/nc-backup/README.md
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+Persistent=true
+RandomizedDelaySec=900
+
+[Install]
+WantedBy=timers.target

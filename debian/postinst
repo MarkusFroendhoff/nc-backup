@@ -1,25 +1,26 @@
 #!/bin/sh
 set -e
 
-case "${1}" in
+case "$1" in
   configure)
-    groupadd -f nc-backup 2>/dev/null || true
-    install -d -m 775 -o root -g nc-backup /etc/nc-backup
-    install -d -m 755 -o root -g root /var/log/nc-backup
-
-    if [ -n "${SUDO_USER:-}" ]; then
-      usermod -aG nc-backup "${SUDO_USER}" 2>/dev/null || true
+    mkdir -p /etc/nc-backup /var/backups/nextcloud
+    chmod 700 /var/backups/nextcloud 2>/dev/null || true
+    if [ ! -f /etc/nc-backup/config.yaml ] && [ -f /etc/nc-backup/config.example.yaml ]; then
+      cp /etc/nc-backup/config.example.yaml /etc/nc-backup/config.yaml
+      chmod 600 /etc/nc-backup/config.yaml
     fi
-
-    if [ -d /run/systemd/system ]; then
-      # Oneshot-Backup nicht beim Boot starten – nur der Timer darf ihn auslösen.
-      systemctl disable nc-backup.service >/dev/null 2>&1 || true
-      if [ -x /usr/lib/nc-backup/enable-web-service.sh ]; then
-        /usr/lib/nc-backup/enable-web-service.sh || true
-      fi
-      if command -v nc-backup-run >/dev/null 2>&1; then
-        nc-backup-run --apply-schedule >/dev/null 2>&1 || true
-      fi
+    python3 - <<'PY' || true
+from nc_backup.secrets import ensure_web_token
+from nc_backup.detect import apply_detected_defaults
+ensure_web_token()
+apply_detected_defaults()
+PY
+    if command -v ufw >/dev/null 2>&1; then
+      ufw allow 42173/tcp comment 'nc-backup-web' >/dev/null 2>&1 || true
+    fi
+    if command -v systemctl >/dev/null; then
+      systemctl daemon-reload || true
+      systemctl enable --now nc-backup-web.service || true
     fi
     ;;
 esac

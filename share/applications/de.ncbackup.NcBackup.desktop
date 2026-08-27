@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=NC Backup
+Comment=Nextcloud sichern — Desktop-App oder Web-Oberfläche unter http://SERVER-IP:42173
+Exec=nc-backup-gui
+Icon=folder-download-symbolic
+Terminal=false
+Type=Application
+Categories=Utility;System;
+StartupNotify=true

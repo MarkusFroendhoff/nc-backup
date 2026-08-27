@@ -1,0 +1,18 @@
+[Unit]
+Description=NC Backup Web-Oberfläche
+After=network.target
+
+[Service]
+Type=simple
+Environment=NC_BACKUP_CONFIG=/etc/nc-backup/config.yaml
+Environment=NC_BACKUP_WEB_BIND=0.0.0.0
+Environment=NC_BACKUP_WEB_PORT=42173
+ExecStart=/usr/bin/python3 -m nc_backup_web
+User=root
+Group=root
+Restart=on-failure
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

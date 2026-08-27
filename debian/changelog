@@ -1,61 +1,24 @@
-nc-backup (1.7.1-1) noble; urgency=medium
+nc-backup (1.8.0-1) noble; urgency=medium
 
-  * Patch: geplanter systemd-Job findet nc-backup-run (203/EXEC)
-  * ExecStart über PATH (/usr/local/bin), nicht fest /usr/bin
-  * Installation schreibt die Timer-Unit neu; Web-GUI startet weiter beim Boot
+  * Versionsstand an 1.7.1 anschließen (nicht 0.3.0)
+  * Nutzerfreundlichere GUI und Web-UI (gleiche Struktur)
+  * Web-Dienst auf Port 42173, UFW-Regel, starker Zugangsschlüssel
+  * Lizenz AGPL-3.0-or-later
 
- -- Markus Fröndhoff <local@nc-backup>  Thu, 27 Aug 2026 11:55:00 +0200
+ -- NC Backup <nc-backup@localhost>  Thu, 27 Aug 2026 13:00:00 +0200
 
-nc-backup (1.7.0-1) noble; urgency=medium
+nc-backup (0.3.0-2) noble; urgency=medium
 
-  * Version 1.7.0 (aktueller Stand)
-  * Nextcloud-App ncbackup: eigene Oberfläche zum Backup starten
-  * API-Token nur in den Nextcloud-Admin-Einstellungen
-  * REST-API zum Starten einer Sicherung sowie Status und Ziele
-  * Installationsanleitung für die App (nicht im App Store)
+  * Web-Oberfläche als systemd-Dienst (Port 42173)
+  * Lizenz AGPL-3.0-or-later
+  * Nextcloud-Erkennung bei der Installation
 
- -- Markus Fröndhoff <local@nc-backup>  Wed, 26 Aug 2026 13:50:00 +0200
+ -- NC Backup <nc-backup@localhost>  Thu, 27 Aug 2026 12:00:00 +0200
 
-nc-backup (1.5.0-1) noble; urgency=medium
+nc-backup (0.3.0-1) noble; urgency=medium
 
-  * Web-GUI bilingual (German / English)
-  * Language switcher and browser language detection
+  * GUI: Rclone-Assistent und Wiederherstellungs-Ansicht
+  * Inkrementelle Backups mit Restic
+  * Debian-Paket für Ubuntu 24.04
 
- -- Markus Fröndhoff <local@nc-backup>  Tue, 25 Aug 2026 13:25:00 +0200
-
-nc-backup (1.4.1-1) noble; urgency=medium
-
-  * Stream-Verschlüsselung direkt auf Netzwerk/USB (ohne Pi-Zwischenspeicher)
-  * Inkrementelle Snapshots (rsync --link-dest)
-  * Web-GUI als systemd-Dienst (Autostart nach Reboot)
-  * Paket Architecture: all (ARM64 + Intel/AMD)
-
- -- Markus Fröndhoff <local@nc-backup>  Sun, 23 Aug 2026 18:00:00 +0200
-
-nc-backup (1.3.0-1) noble; urgency=medium
-
-  * Web-GUI fuer headless Server (Flask)
-  * Automatischer Wechsel auf Web-GUI ohne DISPLAY
-  * Doku fuer Firewall-Freigabe und Web-Port
-
- -- Markus Fröndhoff <local@nc-backup>  Wed, 19 Aug 2026 12:55:00 +0200
-
-nc-backup (1.2.0-1) noble; urgency=medium
-
-  * GPG-Verschlüsselung (Passphrase oder Empfänger-Schlüssel)
-  * Restore-Assistent in der GUI mit Wartungsmodus
-
- -- Markus Fröndhoff <local@nc-backup>  Mon, 08 Jun 2026 16:00:00 +0200
-
-nc-backup (1.1.0-1) noble; urgency=medium
-
-  * Docker-Volume-Autoerkennung in der GUI
-  * Dokumentation: Restore, Sicherheit, .deb-Build-Skript
-
- -- Markus Fröndhoff <local@nc-backup>  Mon, 08 Jun 2026 14:00:00 +0200
-
-nc-backup (1.0.0-1) noble; urgency=medium
-
-  * Erstveröffentlichung: GUI, DB-Dump, Zeitplanung
-
- -- Markus Fröndhoff <local@nc-backup>  Mon, 08 Jun 2026 12:00:00 +0200
+ -- NC Backup <nc-backup@localhost>  Wed, 27 May 2026 12:00:00 +0200

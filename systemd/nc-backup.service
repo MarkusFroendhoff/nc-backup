@@ -1,0 +1,20 @@
+[Unit]
+Description=NC Backup — Nextcloud (MariaDB + Daten, inkrementell)
+Documentation=file:///usr/share/doc/nc-backup/README.md
+After=network-online.target mariadb.service mysql.service docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=NC_BACKUP_CONFIG=/etc/nc-backup/config.yaml
+ExecStart=/usr/bin/python3 -m nc_backup run
+User=root
+Group=root
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

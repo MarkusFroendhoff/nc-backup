@@ -1,0 +1,30 @@
+# Beispiel-Konfiguration — wird von der GUI nach /etc/nc-backup/config.yaml geschrieben
+
+nextcloud:
+  install_dir: /var/www/nextcloud
+  data_dir: /var/www/nextcloud/data
+  occ_user: www-data
+  maintenance_mode: true
+
+database:
+  host: localhost
+  port: 3306
+  name: nextcloud
+  user: nextcloud
+  password: ""
+
+destination:
+  mode: incremental
+  provider: local
+  local_path: /var/backups/nextcloud/restic-repo
+  retention:
+    keep_daily: 7
+    keep_weekly: 4
+    keep_monthly: 6
+  # s3_endpoint: s3.eu-central-1.amazonaws.com
+  # s3_bucket: mein-bucket
+  # s3_prefix: nextcloud
+
+schedule:
+  enabled: true
+  on_calendar: "02:30"

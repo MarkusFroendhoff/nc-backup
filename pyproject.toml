@@ -1,23 +1,30 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "nc-backup"
-version = "1.7.1"
-description = "Nextcloud Backup mit GUI für Ubuntu ARM64 (Raspberry Pi)"
+version = "1.8.2"
+description = "Nextcloud-Backup mit GUI, inkrementellen Snapshots und Cloud-Zielen für Ubuntu"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
+license = { text = "AGPL-3.0-or-later" }
+authors = [{ name = "nc-backup" }]
 dependencies = [
-    "bcrypt>=4.0",
-    "Flask>=3.0",
-    "PyGObject>=3.42",
+  "PyYAML>=6.0",
 ]
 
+[project.optional-dependencies]
+gui = []
+
 [project.scripts]
-nc-backup = "nc_backup.launcher:main"
-nc-backup-web = "nc_backup.web.app:main"
-nc-backup-run = "nc_backup.cli:main"
+nc-backup = "nc_backup.cli:main"
+nc-backup-gui = "nc_backup_gui.main:main"
+nc-backup-web = "nc_backup_web.main:main"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
+include = ["nc_backup*", "nc_backup_gui*", "nc_backup_web*"]
+
+[tool.setuptools.package-data]
+nc_backup_web = ["static/*"]
