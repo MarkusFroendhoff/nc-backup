@@ -11,8 +11,12 @@ case "${1}" in
       usermod -aG nc-backup "${SUDO_USER}" 2>/dev/null || true
     fi
 
-    if [ -d /run/systemd/system ] && [ -x /usr/lib/nc-backup/enable-web-service.sh ]; then
-      /usr/lib/nc-backup/enable-web-service.sh || true
+    if [ -d /run/systemd/system ]; then
+      # Oneshot-Backup nicht beim Boot starten – nur der Timer darf ihn auslösen.
+      systemctl disable nc-backup.service >/dev/null 2>&1 || true
+      if [ -x /usr/lib/nc-backup/enable-web-service.sh ]; then
+        /usr/lib/nc-backup/enable-web-service.sh || true
+      fi
     fi
     ;;
 esac

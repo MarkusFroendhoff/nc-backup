@@ -15,7 +15,12 @@ def main(argv: list[str] | None = None) -> int:
         return apply_schedule_from_cli()
 
     setup_logging()
-    config = load_config()
+    try:
+        config = load_config()
+    except Exception as exc:  # noqa: BLE001 – Journal soll den echten Grund sehen
+        print(f"nc-backup: Konfiguration konnte nicht geladen werden: {exc}", file=sys.stderr)
+        return 2
+
     if not config.setup_complete:
         print("nc-backup: Ersteinrichtung in der GUI abschließen.", file=sys.stderr)
         return 2
@@ -26,6 +31,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Ziel: {result.destination}")
     for err in result.errors:
         print(f"Warnung: {err}", file=sys.stderr)
+    if not result.success:
+        print("nc-backup: geplante Sicherung fehlgeschlagen.", file=sys.stderr)
     return 0 if result.success else 1
 
 

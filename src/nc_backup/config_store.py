@@ -44,10 +44,16 @@ class AppConfig:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> AppConfig:
-        schedule_data = data.pop("schedule", {})
-        schedule = ScheduleConfig(**schedule_data) if schedule_data else ScheduleConfig()
+        payload = dict(data)
+        schedule_raw = payload.pop("schedule", {}) or {}
+        if not isinstance(schedule_raw, dict):
+            schedule_raw = {}
+        schedule_known = {item.name for item in fields(ScheduleConfig)}
+        schedule = ScheduleConfig(
+            **{key: value for key, value in schedule_raw.items() if key in schedule_known}
+        )
         known = {item.name for item in fields(cls) if item.name != "schedule"}
-        filtered = {key: value for key, value in data.items() if key in known}
+        filtered = {key: value for key, value in payload.items() if key in known}
         return cls(schedule=schedule, **filtered)
 
 
