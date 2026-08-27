@@ -4,3 +4,4 @@ share/polkit-1/actions/de.ncbackup.policy usr/share/polkit-1/actions/
 systemd/nc-backup.service etc/systemd/system/
 systemd/nc-backup.timer etc/systemd/system/
 systemd/nc-backup-web.service etc/systemd/system/
+nextcloud-app/ncbackup usr/share/nc-backup/nextcloud-app/ncbackup

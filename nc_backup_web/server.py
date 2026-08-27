@@ -370,6 +370,9 @@ class Handler(BaseHTTPRequestHandler):
         auth = self.headers.get("Authorization") or ""
         if auth.lower().startswith("bearer "):
             return auth[7:].strip()
+        header_token = (self.headers.get("X-NC-Backup-Token") or "").strip()
+        if header_token:
+            return header_token
         cookie_header = self.headers.get("Cookie") or ""
         if cookie_header:
             jar = SimpleCookie()
