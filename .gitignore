@@ -17,3 +17,6 @@ debian/nc-backup/
 ../nc-backup_*.deb
 ../nc-backup_*.changes
 ../nc-backup_*.buildinfo
+
+# Produktseite nur lokal / FileZilla, nicht auf GitHub
+website/
