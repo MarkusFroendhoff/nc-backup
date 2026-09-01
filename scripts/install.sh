@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installation auf Ubuntu 24.04 (Zielsystem)
+# Installation auf Ubuntu 24.04 / 26.04 LTS (Zielsystem)
 
 set -euo pipefail
 

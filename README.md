@@ -1,6 +1,6 @@
 # NC Backup
 
-**Nextcloud-Backup für Ubuntu 24.04 LTS** — mit **grafischer Oberfläche**, **Web-Oberfläche**, **inkrementellen Snapshots** (Restic) und Anbindung an **lokale Festplatten**, **SFTP**, **S3**, **Azure**, **Backblaze B2**, **WebDAV** sowie **Rclone** (Dropbox, Google Drive, OneDrive, …).
+**Nextcloud-Backup für Ubuntu 24.04 und 26.04 LTS** — mit **grafischer Oberfläche**, **Web-Oberfläche**, **inkrementellen Snapshots** (Restic) und Anbindung an **lokale Festplatten**, **SFTP**, **S3**, **Azure**, **Backblaze B2**, **WebDAV** sowie **Rclone** (Dropbox, Google Drive, OneDrive, …).
 
 ## Funktionen
 
@@ -14,7 +14,7 @@
 | **Cloud/Netzwerk** | SFTP und S3 direkt über Restic; WebDAV/Rclone per Sync |
 | **Zeitplan** | systemd-Timer (z. B. täglich 02:30 Uhr) aus der Oberfläche aktivieren |
 | **Wiederherstellung** | Snapshots anzeigen und DB/Config/Daten selektiv zurückspielen |
-| **.deb-Paket** | Offizielle Installation für Ubuntu 24.04 |
+| **.deb-Paket** | Offizielle Installation für Ubuntu 24.04 und 26.04 LTS |
 
 ## Architektur
 

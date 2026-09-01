@@ -29,7 +29,7 @@ apt-get update -qq
 apt-get install -y \
   python3 python3-pip python3-yaml python3-setuptools \
   python3-gi gir1.2-adw-1 gir1.2-gtk-4.0 \
-  restic rclone mariadb-client rsync policykit-1
+  restic rclone mariadb-client rsync pkexec polkitd
 
 echo "==> NC Backup installieren …"
 pip3 install --break-system-packages "${REPO_ROOT}"

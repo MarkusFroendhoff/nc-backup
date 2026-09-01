@@ -22,11 +22,12 @@ Depends:
  rclone,
  mariadb-client,
  rsync,
- policykit-1,
+ pkexec,
+ polkitd,
  python3-gi,
  gir1.2-adw-1,
  gir1.2-gtk-4.0,
-Description: Nextcloud-Backup mit GUI und Web-Oberfläche für Ubuntu
+Description: Nextcloud-Backup mit GUI und Web-Oberfläche für Ubuntu 24.04 und 26.04 LTS
  NC Backup sichert Nextcloud (MariaDB, Konfiguration und Dateidaten)
  inkrementell mit Restic. Grafische Oberfläche, Web-Oberfläche unter
  http://SERVER-IP:42173, Cloud-Ziele per Rclone/S3/SFTP/WebDAV,

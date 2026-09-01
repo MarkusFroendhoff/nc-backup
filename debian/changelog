@@ -1,3 +1,13 @@
+nc-backup (2.0.0-1) noble; urgency=medium
+
+  * Version 2.0 für Ubuntu 26.04 LTS (Resolute): das Paket policykit-1
+    existiert dort nicht mehr (no installation candidate).
+    Abhängigkeit auf polkitd und pkexec umgestellt; die GUI braucht pkexec
+    für Root-Aktionen. Beide Pakete gibt es auch unter 24.04.
+  * GitHub-Issue #1 (Jan / DecaTec).
+
+ -- Markus Fröndhoff <markus@froendhoff.com>  Tue, 01 Sep 2026 14:15:00 +0200
+
 nc-backup (1.8.2-1) noble; urgency=medium
 
   * Restic-Parent: Snapshot-ID statt --parent latest
