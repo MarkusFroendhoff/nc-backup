@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import tempfile
 from collections.abc import Callable
@@ -26,14 +27,18 @@ def _pkexec_python(
     Path(sh_path).chmod(0o755)
 
     try:
+        if os.geteuid() == 0:
+            cmd = ["python3", py_path]
+        else:
+            cmd = ["pkexec", "bash", sh_path]
         if on_output is None:
-            r = subprocess.run(["pkexec", "bash", sh_path], capture_output=True, text=True)
+            r = subprocess.run(cmd, capture_output=True, text=True)
             out = (r.stdout or "") + (r.stderr or "")
             ok = r.returncode == 0
             return ok, out.strip() or ("OK" if ok else "Abgebrochen oder keine Berechtigung")
 
         proc = subprocess.Popen(
-            ["pkexec", "bash", sh_path],
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -91,13 +96,17 @@ data = yaml.safe_load(Path({repr(str(yaml_path))}).read_text(encoding='utf-8'))
 cfg = AppConfig.from_dict(data or {{}})
 save_config(cfg)
 apply_schedule(cfg)
-subprocess.run(['systemctl', 'daemon-reload'], check=True)
-if cfg.schedule.enabled:
-    subprocess.run(['systemctl', 'enable', '--now', 'nc-backup.timer'], check=True)
-    print('Timer aktiviert.')
+print('Konfiguration gespeichert.')
+if __import__('pathlib').Path('/run/systemd/system').exists():
+    subprocess.run(['systemctl', 'daemon-reload'], check=True)
+    if cfg.schedule.enabled:
+        subprocess.run(['systemctl', 'enable', '--now', 'nc-backup.timer'], check=True)
+        print('Timer aktiviert.')
+    else:
+        subprocess.run(['systemctl', 'disable', '--now', 'nc-backup.timer'], check=False)
+        print('Timer deaktiviert.')
 else:
-    subprocess.run(['systemctl', 'disable', '--now', 'nc-backup.timer'], check=False)
-    print('Timer deaktiviert.')
+    print('Kein systemd – Zeitplan in der Config gespeichert, Timer nicht aktiviert.')
 """
     return _pkexec_python(code, extra_cleanup=yaml_path, on_output=on_output)
 
