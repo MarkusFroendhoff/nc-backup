@@ -45,6 +45,7 @@
       </nav>
       <div class="sidebar-foot">
         <span class="badge-ok">Zugangsschlüssel aktiv</span>
+        <span id="app-version" class="muted"></span>
         <button type="button" id="btn-logout" class="linkish">Abmelden</button>
       </div>
     </aside>
@@ -56,6 +57,10 @@
       <div class="content">
 
         <section id="page-overview" class="page">
+          <div id="ov-update" class="update-banner" hidden>
+            <p id="ov-update-text"></p>
+            <a id="ov-update-link" href="https://github.com/MarkusFroendhoff/nc-backup" target="_blank" rel="noopener">Änderungen ansehen</a>
+          </div>
           <div class="cards">
             <article class="card">
               <h2>Status</h2>

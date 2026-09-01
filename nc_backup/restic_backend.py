@@ -6,13 +6,15 @@ import json
 import os
 import shutil
 import subprocess
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
 from nc_backup.logutil import log
 from nc_backup.models import AppConfig, Provider
 from nc_backup.runner import run, which
+
+# Feste Pfade, damit Restic Parent-Snapshots erkennt (kein /tmp/nc-backup-* pro Lauf).
+STAGING_ROOT = Path("/var/lib/nc-backup/staging")
 
 
 @dataclass
@@ -121,6 +123,32 @@ def restore_snapshot(cfg: AppConfig, snapshot_id: str, target: Path) -> None:
     run(["restic", "restore", snapshot_id, "--target", str(target)], env=env)
 
 
+def _prepare_staging_dirs() -> tuple[Path, Path]:
+    if STAGING_ROOT.exists():
+        shutil.rmtree(STAGING_ROOT)
+    db_dir = STAGING_ROOT / "database"
+    cfg_dir = STAGING_ROOT / "config"
+    db_dir.mkdir(parents=True)
+    cfg_dir.mkdir(parents=True)
+    return db_dir, cfg_dir
+
+
+def _latest_snapshot_id(env: dict[str, str]) -> str | None:
+    """Neueste Snapshot-ID, ohne Pfad-Filter (restic 'latest' verlangt gleiche Pfade)."""
+    snapshots = run(["restic", "snapshots", "--json"], env=env, check=False)
+    if snapshots.returncode != 0:
+        return None
+    try:
+        raw = json.loads(snapshots.stdout or "[]")
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(raw, list) or not raw:
+        return None
+    raw.sort(key=lambda s: str(s.get("time") or ""), reverse=True)
+    sid = raw[0].get("id") or raw[0].get("short_id")
+    return str(sid) if sid else None
+
+
 def backup_paths(cfg: AppConfig, paths: list[Path], tag: str) -> None:
     env = _restic_env(cfg)
     cmd = [
@@ -131,6 +159,10 @@ def backup_paths(cfg: AppConfig, paths: list[Path], tag: str) -> None:
         "--host",
         os.uname().nodename,
     ]
+    parent = _latest_snapshot_id(env)
+    if parent:
+        cmd.extend(["--parent", parent])
+        log(f"Restic-Parent: {parent[:12]}")
     cmd.extend(str(p) for p in paths)
     run(cmd, env=env)
     _apply_retention(cfg, env)
@@ -157,35 +189,28 @@ def run_incremental_backup(cfg: AppConfig) -> None:
     """Staging mit DB + Config, Restic-Backup inkl. Datenverzeichnis."""
     ensure_repository(cfg)
     stamp = __import__("datetime").datetime.now().strftime("%Y%m%d-%H%M%S")
-    staging = Path(tempfile.mkdtemp(prefix=f"nc-backup-{stamp}-"))
-    try:
-        db_dir = staging / "database"
-        cfg_dir = staging / "config"
-        db_dir.mkdir()
-        cfg_dir.mkdir()
+    db_dir, cfg_dir = _prepare_staging_dirs()
 
-        from nc_backup.mariadb import dump_database
+    from nc_backup.mariadb import dump_database
 
-        dump_database(cfg, db_dir / "nextcloud.sql")
+    dump_database(cfg, db_dir / "nextcloud.sql")
 
-        nc_config = Path(cfg.nextcloud.install_dir) / "config"
-        if nc_config.is_dir():
-            shutil.copytree(nc_config, cfg_dir / "config", dirs_exist_ok=True)
-        else:
-            container = (getattr(cfg.nextcloud, "container", "") or "").strip()
-            if container:
-                from nc_backup.docker_detect import copy_config_from_container
+    nc_config = Path(cfg.nextcloud.install_dir) / "config"
+    if nc_config.is_dir():
+        shutil.copytree(nc_config, cfg_dir / "config", dirs_exist_ok=True)
+    else:
+        container = (getattr(cfg.nextcloud, "container", "") or "").strip()
+        if container:
+            from nc_backup.docker_detect import copy_config_from_container
 
-                if copy_config_from_container(container, cfg_dir / "config"):
-                    log(f"config/ aus Container {container} kopiert.")
-                else:
-                    log(
-                        "config/ liegt nicht auf dem Host und konnte nicht "
-                        f"aus dem Container {container} kopiert werden."
-                    )
+            if copy_config_from_container(container, cfg_dir / "config"):
+                log(f"config/ aus Container {container} kopiert.")
+            else:
+                log(
+                    "config/ liegt nicht auf dem Host und konnte nicht "
+                    f"aus dem Container {container} kopiert werden."
+                )
 
-        paths = [db_dir, cfg_dir, Path(cfg.nextcloud.data_dir)]
-        backup_paths(cfg, paths, tag=f"nc-backup-{stamp}")
-        log(f"Inkrementelles Backup abgeschlossen (Snapshot-Tag: nc-backup-{stamp}).")
-    finally:
-        shutil.rmtree(staging, ignore_errors=True)
+    paths = [db_dir, cfg_dir, Path(cfg.nextcloud.data_dir)]
+    backup_paths(cfg, paths, tag=f"nc-backup-{stamp}")
+    log(f"Inkrementelles Backup abgeschlossen (Snapshot-Tag: nc-backup-{stamp}).")

@@ -317,7 +317,32 @@ class MainWindow(Adw.ApplicationWindow):
         self._ov_backup_btn.set_halign(Gtk.Align.START)
         self._ov_backup_btn.connect("clicked", self._on_run)
 
-        return self._wrap_page(heading, intro, c1, c2, c3, c4, self._ov_hints, self._ov_backup_btn)
+        self._update_banner = Adw.Banner(title="")
+        self._update_banner.set_revealed(False)
+        self._update_banner.set_button_label("Ansehen")
+        self._update_url = "https://github.com/MarkusFroendhoff/nc-backup"
+        self._update_banner.connect("button-clicked", self._on_open_update)
+
+        return self._wrap_page(
+            self._update_banner, heading, intro, c1, c2, c3, c4, self._ov_hints, self._ov_backup_btn
+        )
+
+    def _on_open_update(self, *_args) -> None:
+        from gi.repository import Gio
+
+        url = getattr(self, "_update_url", "") or "https://github.com/MarkusFroendhoff/nc-backup"
+        try:
+            Gio.AppInfo.launch_default_for_uri(url, None)
+        except Exception:
+            pass
+
+    def _apply_update_info(self, info) -> None:
+        if isinstance(info, Exception) or not isinstance(info, dict) or not info.get("update_available"):
+            self._update_banner.set_revealed(False)
+            return
+        self._update_url = str(info.get("url") or "https://github.com/MarkusFroendhoff/nc-backup")
+        self._update_banner.set_title(str(info.get("message") or "Eine neue Version ist verfügbar."))
+        self._update_banner.set_revealed(True)
 
     def _refresh_overview(self) -> None:
         install = self._nc_install.get_text().strip()
@@ -355,6 +380,13 @@ class MainWindow(Adw.ApplicationWindow):
         else:
             self._ov_hints.set_text("Alles bereit für eine Sicherung.")
             self._ov_hints.set_visible(True)
+
+        def _check():
+            from nc_backup.updates import check_for_update
+
+            return check_for_update()
+
+        run_async(_check, self._apply_update_info)
 
     def _dest_summary_text(self, mode: str, pid: str) -> str:
         kind = "laufende Sicherung" if mode == "incremental" else "komplette Archive"

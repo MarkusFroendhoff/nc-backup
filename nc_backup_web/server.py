@@ -583,6 +583,23 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/secret/new":
             self._json(200, {"ok": True, "secret": generate_secret()})
             return
+        if path == "/api/update":
+            from nc_backup.updates import check_for_update
+
+            force = "force=1" in (self.path or "")
+            try:
+                info = check_for_update(force=force)
+            except Exception as exc:
+                info = {
+                    "ok": False,
+                    "installed": __import__("nc_backup").__version__,
+                    "latest": "",
+                    "update_available": False,
+                    "url": "https://github.com/MarkusFroendhoff/nc-backup",
+                    "message": f"Update-Prüfung fehlgeschlagen: {exc}",
+                }
+            self._json(200, info)
+            return
         self._json(404, {"ok": False, "error": "Nicht gefunden."})
 
     def _api_post(self, path: str, body: dict[str, Any]) -> None:

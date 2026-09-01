@@ -1,3 +1,16 @@
+nc-backup (1.8.2-1) noble; urgency=medium
+
+  * Restic-Parent: Snapshot-ID statt --parent latest
+    (Nachtlauf ab 30.8. brach ab, obwohl USB-Platte hing:
+    latest verlangt dieselben Pfade; Staging wechselte von /tmp nach
+    /var/lib/nc-backup/staging)
+  * Update-Hinweis in Web-UI und Desktop-GUI (GitHub-Version, kein Auto-Install)
+  * Timer: ExecStart=/usr/bin/python3 -m nc_backup run
+  * Docker/AIO-Erkennung inkl. extra DB-Container
+  * API /api/backup, /api/status, /api/targets und Zugangsschlüssel unverändert
+
+ -- Markus Fröndhoff <markus@froendhoff.com>  Tue, 01 Sep 2026 13:50:00 +0200
+
 nc-backup (1.8.0-1) noble; urgency=medium
 
   * Versionsstand an 1.7.1 anschließen (nicht 0.3.0)

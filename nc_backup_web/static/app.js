@@ -126,6 +126,27 @@ async function loadOverview() {
     jobEl.textContent = s.job && s.job.message ? s.job.message : "";
     document.getElementById("btn-backup").disabled = false;
   }
+  await loadUpdateBanner();
+}
+
+async function loadUpdateBanner() {
+  const box = document.getElementById("ov-update");
+  const ver = document.getElementById("app-version");
+  try {
+    const u = await api("/api/update");
+    if (ver && u.installed) ver.textContent = "Version " + u.installed;
+    if (!box) return;
+    if (u.update_available) {
+      document.getElementById("ov-update-text").textContent = u.message || ("Version " + u.latest + " ist verfügbar.");
+      const a = document.getElementById("ov-update-link");
+      if (u.url) a.href = u.url;
+      box.hidden = false;
+    } else {
+      box.hidden = true;
+    }
+  } catch (err) {
+    if (box) box.hidden = true;
+  }
 }
 
 async function startBackup() {

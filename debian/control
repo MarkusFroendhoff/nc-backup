@@ -11,7 +11,7 @@ Build-Depends:
  python3-wheel,
  python3-yaml,
 Standards-Version: 4.6.2
-Homepage: https://github.com/local/nc-backup
+Homepage: https://github.com/MarkusFroendhoff/nc-backup
 
 Package: nc-backup
 Architecture: all
