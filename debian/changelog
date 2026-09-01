@@ -1,3 +1,11 @@
+nc-backup (2.0.1-1) noble; urgency=medium
+
+  * Desktop-GUI: Absturz unter Ubuntu 26.04 behoben
+    (Gio.ApplicationFlags.DEFAULT existiert in neueren GLib/PyGObject
+    nicht mehr; DEFAULT_FLAGS mit Fallback auf DEFAULT).
+
+ -- Markus Fröndhoff <markus@froendhoff.com>  Tue, 01 Sep 2026 15:05:00 +0200
+
 nc-backup (2.0.0-1) noble; urgency=medium
 
   * Version 2.0 für Ubuntu 26.04 LTS (Resolute): das Paket policykit-1

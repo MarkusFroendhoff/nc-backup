@@ -18,7 +18,11 @@ class NcBackupApplication(Adw.Application):
     def __init__(self) -> None:
         super().__init__(
             application_id="de.ncbackup.NcBackup",
-            flags=Gio.ApplicationFlags.DEFAULT,
+            flags=getattr(
+                Gio.ApplicationFlags,
+                "DEFAULT_FLAGS",
+                getattr(Gio.ApplicationFlags, "DEFAULT", 0),
+            ),
         )
         self.connect("activate", self._on_activate)
         self._main: MainWindow | None = None
