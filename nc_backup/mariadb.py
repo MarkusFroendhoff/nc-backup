@@ -9,6 +9,7 @@ from pathlib import Path
 
 from nc_backup.logutil import log
 from nc_backup.models import AppConfig
+from nc_backup.detect import parse_dbhost
 from nc_backup.runner import which
 
 DUMP_TIMEOUT = 3600
@@ -268,11 +269,11 @@ def _dump_mysql_host(cfg: AppConfig, dest_sql: Path) -> None:
         db.user,
         db.name,
     ]
-    host = db.host or "localhost"
-    if host.startswith("/") or str(host).endswith(".sock"):
+    host, port_from_host = parse_dbhost(db.host or "localhost")
+    if host.startswith("/") or host.endswith(".sock"):
         cmd[1:1] = ["-S", host]
     else:
-        cmd[1:1] = ["-h", host, "-P", str(db.port or 3306)]
+        cmd[1:1] = ["-h", host, "-P", str(port_from_host or db.port or 3306)]
     env = os.environ.copy()
     if db.password:
         env["MYSQL_PWD"] = db.password

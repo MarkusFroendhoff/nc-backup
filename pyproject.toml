@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nc-backup"
-version = "2.0.1"
+version = "2.0.2"
 description = "Nextcloud-Backup mit GUI, inkrementellen Snapshots und Cloud-Zielen für Ubuntu 24.04 und 26.04 LTS"
 readme = "README.md"
 requires-python = ">=3.12"

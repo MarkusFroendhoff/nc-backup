@@ -139,14 +139,19 @@ def detect_occ_user(install_dir: Path) -> tuple[str, bool]:
 
 
 def parse_dbhost(raw: str) -> tuple[str, int | None]:
+    """Nextcloud-dbhost: Host, Host:Port oder Host:/pfad.sock."""
     raw = (raw or "localhost").strip()
+    if not raw:
+        return "localhost", None
+    if ":" in raw and not raw.startswith("["):
+        host_part, _, rest = raw.partition(":")
+        if rest.startswith("/") or rest.endswith(".sock"):
+            return rest, None
+        if rest.isdigit() and host_part:
+            return host_part, int(rest)
     if raw.startswith("/") or raw.endswith(".sock"):
         return raw, None
-    if ":" in raw:
-        host, _, port = raw.rpartition(":")
-        if port.isdigit() and host:
-            return host, int(port)
-    return raw or "localhost", None
+    return raw, None
 
 
 def _apply_parsed_db(d: NextcloudDetection, parsed: dict[str, str]) -> None:

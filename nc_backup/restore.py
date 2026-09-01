@@ -8,6 +8,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+from nc_backup.detect import parse_dbhost
 from nc_backup.logutil import log
 from nc_backup.models import AppConfig, BackupMode
 from nc_backup.nextcloud import maintenance
@@ -50,16 +51,20 @@ def _import_database(cfg: AppConfig, sql_file: Path) -> None:
     env = os.environ.copy()
     if db.password:
         env["MYSQL_PWD"] = db.password
-    cmd = [
-        "mysql",
-        "-h",
-        db.host,
-        "-P",
-        str(db.port),
-        "-u",
-        db.user,
-        db.name,
-    ]
+    host, port_from_host = parse_dbhost(db.host or "localhost")
+    if host.startswith("/") or host.endswith(".sock"):
+        cmd = ["mysql", "-S", host, "-u", db.user, db.name]
+    else:
+        cmd = [
+            "mysql",
+            "-h",
+            host,
+            "-P",
+            str(port_from_host or db.port or 3306),
+            "-u",
+            db.user,
+            db.name,
+        ]
     log(f"Importiere Datenbank aus {sql_file} …")
     with sql_file.open("rb") as fh:
         subprocess.run(cmd, env=env, stdin=fh, check=True)

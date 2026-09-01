@@ -1,3 +1,11 @@
+nc-backup (2.0.2-1) noble; urgency=medium
+
+  * mysqldump: Nextcloud-dbhost im Format localhost:/run/mysqld/mysqld.sock
+    korrekt als Unix-Socket lesen (nicht den ganzen String als -S-Pfad).
+    Betrifft Dump und Restore.
+
+ -- Markus Fröndhoff <markus@froendhoff.com>  Tue, 01 Sep 2026 15:30:00 +0200
+
 nc-backup (2.0.1-1) noble; urgency=medium
 
   * Desktop-GUI: Absturz unter Ubuntu 26.04 behoben
