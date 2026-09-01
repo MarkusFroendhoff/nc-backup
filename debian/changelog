@@ -7,6 +7,8 @@ nc-backup (2.0.1-1) noble; urgency=medium
     "Error getting authority" ohne Polkit-System-Bus).
   * Zeitplan: Config speichern auch ohne laufendes systemd;
     Timer nur aktivieren, wenn systemd da ist.
+  * Debian-Paket: debian/compat entfernt (Compat-Level steht schon
+    in debhelper-compat), sonst bricht der Build mit neuem debhelper ab.
 
  -- Markus Fröndhoff <markus@froendhoff.com>  Tue, 01 Sep 2026 15:05:00 +0200
 
