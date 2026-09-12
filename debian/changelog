@@ -1,3 +1,15 @@
+nc-backup (1.8.3-1) noble; urgency=medium
+
+  * Web-API: POST-Body [] (leeres PHP-Array der Nextcloud-App) wie {}
+    behandeln, damit „Backup starten“ nicht mehr mit 400
+    „JSON-Objekt erwartet“ scheitert. Nicht-leere Arrays und andere
+    JSON-Typen bleiben abgelehnt.
+  * Nextcloud-App 1.3.3: leere POST-Bodies als JSON-Objekt {} senden.
+  * Ubuntu-24.04-/Pi-Linie (Backport aus 2.0.3). 2.0.3 bleibt aktuell
+    für 26.04 und läuft ebenfalls auf 24.04.
+
+ -- Markus Fröndhoff <markus@froendhoff.com>  Sat, 12 Sep 2026 11:45:00 +0200
+
 nc-backup (1.8.2-1) noble; urgency=medium
 
   * Restic-Parent: Snapshot-ID statt --parent latest
