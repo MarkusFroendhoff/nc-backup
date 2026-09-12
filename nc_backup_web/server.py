@@ -76,6 +76,28 @@ def _install_log_hook() -> None:
 _install_log_hook()
 
 
+def parse_request_json(raw: bytes | str) -> dict[str, Any]:
+    """Parse a JSON request body as an object.
+
+    Empty body, ``{}`` and PHP's empty array ``[]`` become ``{}``.
+    Non-empty arrays and other JSON types are rejected.
+    """
+    if not raw:
+        return {}
+    if isinstance(raw, bytes):
+        text = raw.decode("utf-8")
+    else:
+        text = raw
+    if not text.strip():
+        return {}
+    data = json.loads(text)
+    if isinstance(data, dict):
+        return data
+    if isinstance(data, list) and not data:
+        return {}
+    raise ValueError("JSON-Objekt erwartet")
+
+
 def destination_summary(cfg: Any) -> str:
     from nc_backup.models import Provider
 
@@ -350,12 +372,7 @@ class Handler(BaseHTTPRequestHandler):
         if length > 1_000_000:
             raise ValueError("Anfrage zu groß")
         raw = self.rfile.read(length)
-        if not raw:
-            return {}
-        data = json.loads(raw.decode("utf-8"))
-        if not isinstance(data, dict):
-            raise ValueError("JSON-Objekt erwartet")
-        return data
+        return parse_request_json(raw)
 
     def _token_ok(self, offered: str | None) -> bool:
         stored = load_web_token() or ""

@@ -48,3 +48,6 @@ Nextcloud → **Einstellungen → Verwaltung → NC Backup** → URL `http://127
 - `GET /api/status`, `GET /api/targets`, `GET /api/config`
 - `POST /api/config` (lokales Ziel), `POST /api/schedule`, `POST /api/backup`
 - Auth: `Authorization: Bearer <web-token>`
+- `POST /api/backup` erwartet ein JSON-Objekt. Leerer Body und `{}` sind ok.
+  Ab nc-backup **1.8.3** gilt auch das leere Array `[]` (PHP `json_encode([])`)
+  als leeres Objekt. Nicht-leere Arrays bleiben 400. App **1.3.3** sendet `{}`.
