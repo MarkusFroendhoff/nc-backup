@@ -1,3 +1,16 @@
+nc-backup (2.0.3-1) noble; urgency=medium
+
+  * Web-API: POST-Body [] (leeres PHP-Array der Nextcloud-App) wie {}
+    behandeln, damit „Backup starten“ nicht mehr mit 400
+    „JSON-Objekt erwartet“ scheitert. Nicht-leere Arrays und andere
+    JSON-Typen bleiben abgelehnt.
+  * Nextcloud-App 1.3.3: leere POST-Bodies als JSON-Objekt {} senden.
+  * Hinweis: Es gibt keinen aktiven 1.8-Zweig. Installationen auf 1.8.2
+    (z. B. Raspberry Pi) brauchen denselben _read_json-Patch oder die
+    aktualisierte App, die {} sendet.
+
+ -- Markus Fröndhoff <markus@froendhoff.com>  Sat, 12 Sep 2026 11:00:00 +0200
+
 nc-backup (2.0.2-1) noble; urgency=medium
 
   * mysqldump: Nextcloud-dbhost im Format localhost:/run/mysqld/mysqld.sock

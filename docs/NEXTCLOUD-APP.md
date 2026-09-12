@@ -48,3 +48,13 @@ Nextcloud → **Einstellungen → Verwaltung → NC Backup** → URL `http://127
 - `GET /api/status`, `GET /api/targets`, `GET /api/config`
 - `POST /api/config` (lokales Ziel), `POST /api/schedule`, `POST /api/backup`
 - Auth: `Authorization: Bearer <web-token>`
+- `POST /api/backup` erwartet ein JSON-Objekt. Leerer Body und `{}` sind ok.
+  Ab nc-backup **2.0.3** gilt auch das leere Array `[]` (PHP `json_encode([])`)
+  als leeres Objekt. Nicht-leere Arrays bleiben 400.
+
+## Kompatibilität 1.8.2
+
+Es gibt keinen aktiven 1.8-Zweig. Wer auf **1.8.2** bleibt (z. B. Raspberry Pi
+unter Ubuntu 24.04), kann entweder die Nextcloud-App **1.3.3+** einspielen
+(sendet `{}`) oder denselben `_read_json`-Patch wie in 2.0.3 anwenden.
+Die 24.04-/1.8.x-Kompatibilität der übrigen API bleibt unverändert.

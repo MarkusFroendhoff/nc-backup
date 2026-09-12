@@ -85,7 +85,8 @@ class BackupClient {
 		];
 		if ($method === 'POST') {
 			$options['headers']['Content-Type'] = 'application/json';
-			$options['body'] = json_encode($payload);
+			// PHP json_encode([]) is "[]"; the API expects a JSON object.
+			$options['body'] = $payload === [] ? '{}' : json_encode($payload);
 		}
 
 		try {
