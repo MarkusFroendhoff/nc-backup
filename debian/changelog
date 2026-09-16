@@ -1,3 +1,12 @@
+nc-backup (2.1.1-1) noble; urgency=medium
+
+  * Update-Cache: nach einem Paket-Upgrade die Sidebar-Version nicht
+    mehr aus dem 12-Stunden-Check anzeigen, wenn dort noch die alte
+    installierte Version steht. Der Cache wird nur verwendet, wenn
+    installed (und update_available) zur laufenden Version passen.
+
+ -- Markus Fröndhoff <markus@froendhoff.com>  Wed, 16 Sep 2026 11:15:00 +0200
+
 nc-backup (2.1.0-1) noble; urgency=medium
 
   * Web-UI: einzelne Datei oder einen kleinen Pfad aus einem
