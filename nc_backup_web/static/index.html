@@ -175,10 +175,40 @@
 
         <section id="page-restore" class="page" hidden>
           <article class="card">
-            <h2>Wiederherstellung</h2>
-            <p class="warn-banner">Achtung: Wiederherstellung überschreibt bestehende Daten. Vorher prüfen, dass die richtige Sicherung gewählt ist.</p>
+            <h2>Sicherungspunkt</h2>
+            <p class="muted">Zuerst einen Sicherungspunkt wählen. Er gilt für das Holen einer einzelnen Datei und für die komplette Wiederherstellung.</p>
             <button type="button" id="btn-load-snaps" class="btn">Sicherungspunkte laden</button>
             <ul id="snap-list" class="snap-list"></ul>
+          </article>
+
+          <article class="card">
+            <h2>Einzelne Datei holen</h2>
+            <p class="info-banner">Die laufende Nextcloud bleibt unberührt. Die Datei landet in einem Export-Ordner auf diesem Server (unter <code>/var/lib/nc-backup/exports</code>). Von dort können Sie sie herunterladen, per SCP kopieren und selbst in Nextcloud hochladen.</p>
+            <p class="hint">So finden Sie Fotos: Sicherungspunkt wählen, in das Datenverzeichnis wechseln, den Benutzerordner öffnen, dann <code>files</code> und z.&nbsp;B. <code>Photos</code>. Oder den Dateinamen suchen.</p>
+            <div class="row">
+              <input id="file-search" type="text" placeholder="Dateiname suchen, z. B. Urlaub.jpg" autocomplete="off">
+              <button type="button" id="btn-file-search" class="btn">Suchen</button>
+            </div>
+            <div class="toolbar file-nav">
+              <button type="button" id="btn-file-up" class="btn">Übergeordneter Ordner</button>
+              <button type="button" id="btn-file-home" class="btn">Datenverzeichnis</button>
+            </div>
+            <p id="file-crumb" class="muted path-crumb"></p>
+            <ul id="file-list" class="snap-list file-list"></ul>
+            <label for="file-path">Pfad in der Sicherung</label>
+            <input id="file-path" type="text" placeholder="/var/www/nextcloud/data/…/Photos/Urlaub.jpg" autocomplete="off">
+            <p id="file-sel" class="muted">Keine Datei gewählt.</p>
+            <p id="file-msg" class="ok" hidden></p>
+            <p id="file-err" class="error" hidden></p>
+            <div class="toolbar">
+              <button type="button" id="btn-file-restore" class="btn btn-primary">Datei hierher holen</button>
+              <a id="file-download" class="btn" hidden>Herunterladen</a>
+            </div>
+          </article>
+
+          <article class="card">
+            <h2>Komplette Wiederherstellung</h2>
+            <p class="warn-banner">Achtung: Das überschreibt die laufende Nextcloud (Datenbank, Einstellungen und optional alle Dateien). Vorher prüfen, dass der richtige Sicherungspunkt gewählt ist. Zum Holen einer einzelnen Datei die Karte oben verwenden.</p>
             <label class="check"><input id="rst-db" type="checkbox" checked> Datenbank wiederherstellen</label>
             <label class="check"><input id="rst-cfg" type="checkbox" checked> Nextcloud-Einstellungen wiederherstellen</label>
             <label class="check"><input id="rst-data" type="checkbox"> Dateien wiederherstellen (überschreibt Nutzerdateien)</label>

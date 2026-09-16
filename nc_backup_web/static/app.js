@@ -60,6 +60,11 @@ function setMsg(id, text, show) {
 let currentPage = "overview";
 let pollTimer = null;
 let selectedSnap = null;
+let selectedFilePath = "";
+let selectedFileIsDir = false;
+let browsePrefix = "";
+let ncDataDir = "";
+let exportRoot = "/var/lib/nc-backup/exports";
 let wizStep = 1;
 let destConfig = {};
 
@@ -75,7 +80,10 @@ function gotoPage(name) {
   if (name === "setup") initWizard();
   if (name === "dest") loadDest();
   if (name === "schedule") loadSchedule();
-  if (name === "restore") loadSnaps();
+  if (name === "restore") {
+    loadSnaps();
+    api("/api/status").then((s) => applyRestoreJob(s.job)).catch(() => {});
+  }
   if (name === "log") loadLog();
 }
 
@@ -94,7 +102,12 @@ async function loadOverview() {
   const s = await api("/api/status");
   const pill = document.getElementById("ov-status");
   if (s.job && s.job.running) {
-    pill.textContent = s.job.kind === "restore" ? "Wiederherstellung läuft" : "Sicherung läuft";
+    const kinds = {
+      restore: "Wiederherstellung läuft",
+      backup: "Sicherung läuft",
+      "file-restore": "Datei wird geholt",
+    };
+    pill.textContent = kinds[s.job.kind] || "Vorgang läuft";
     pill.className = "status-pill busy";
   } else if (s.ready && s.nextcloud && s.nextcloud.found) {
     pill.textContent = "Bereit";
@@ -165,9 +178,11 @@ function pollStatus() {
     try {
       const s = await api("/api/status");
       if (currentPage === "overview") await loadOverview();
+      if (currentPage === "restore") applyRestoreJob(s.job);
       if (!s.job || !s.job.running) {
         clearInterval(pollTimer);
         pollTimer = null;
+        if (currentPage === "restore") applyRestoreJob(s.job);
       }
     } catch {
       clearInterval(pollTimer);
@@ -434,10 +449,13 @@ async function saveSchedule() {
 
 async function loadSnaps() {
   setMsg("rst-err", "", false);
+  setMsg("file-err", "", false);
   const ul = document.getElementById("snap-list");
   ul.innerHTML = "<li>Lade …</li>";
   try {
     const res = await api("/api/snapshots");
+    if (res.data_dir) ncDataDir = res.data_dir;
+    if (res.export_root) exportRoot = res.export_root;
     const snaps = res.snapshots || [];
     if (!snaps.length) {
       ul.innerHTML = "<li>Keine Sicherungspunkte gefunden.</li>";
@@ -452,12 +470,180 @@ async function loadSnaps() {
         selectedSnap = s.id;
         ul.querySelectorAll("li").forEach((n) => n.classList.remove("sel"));
         li.classList.add("sel");
+        browsePrefix = ncDataDir || "";
+        loadSnapshotFiles();
+      });
+      ul.appendChild(li);
+    });
+    if (selectedSnap) {
+      const still = ul.querySelector('li[data-id="' + CSS.escape(selectedSnap) + '"]');
+      if (still) still.classList.add("sel");
+    }
+  } catch (err) {
+    ul.innerHTML = "";
+    setMsg("rst-err", err.message, true);
+  }
+}
+
+function fmtSize(n) {
+  if (n == null || n === "") return "";
+  const v = Number(n);
+  if (!Number.isFinite(v)) return "";
+  if (v < 1024) return v + " B";
+  if (v < 1024 * 1024) return (v / 1024).toFixed(1) + " KB";
+  if (v < 1024 * 1024 * 1024) return (v / (1024 * 1024)).toFixed(1) + " MB";
+  return (v / (1024 * 1024 * 1024)).toFixed(1) + " GB";
+}
+
+function setSelectedFile(path, isDir) {
+  selectedFilePath = path || "";
+  selectedFileIsDir = !!isDir;
+  const input = document.getElementById("file-path");
+  if (input) input.value = selectedFilePath;
+  const label = document.getElementById("file-sel");
+  if (!selectedFilePath) {
+    setText("file-sel", "Keine Datei gewählt.");
+    return;
+  }
+  setText(
+    "file-sel",
+    (selectedFileIsDir ? "Ordner gewählt: " : "Datei gewählt: ") + selectedFilePath
+  );
+}
+
+async function loadSnapshotFiles(opts) {
+  const options = opts || {};
+  const ul = document.getElementById("file-list");
+  setMsg("file-err", "", false);
+  if (!selectedSnap) {
+    ul.innerHTML = "";
+    const empty = document.createElement("li");
+    empty.textContent = "Bitte zuerst einen Sicherungspunkt wählen.";
+    empty.style.cursor = "default";
+    ul.appendChild(empty);
+    return;
+  }
+  ul.innerHTML = "";
+  const loading = document.createElement("li");
+  loading.textContent = "Lade Dateien …";
+  loading.style.cursor = "default";
+  ul.appendChild(loading);
+  const params = new URLSearchParams();
+  params.set("snapshot_id", selectedSnap);
+  const search = options.search != null ? options.search : document.getElementById("file-search").value.trim();
+  if (search) params.set("q", search);
+  const prefix = options.prefix != null ? options.prefix : browsePrefix;
+  if (prefix) params.set("path", prefix);
+  try {
+    const res = await api("/api/snapshot-ls?" + params.toString());
+    if (res.data_dir) ncDataDir = res.data_dir;
+    if (res.export_root) exportRoot = res.export_root;
+    if (!search) browsePrefix = res.path || prefix || "";
+    setText("file-crumb", search
+      ? "Suche in " + (res.path || browsePrefix || "der Sicherung")
+      : (res.path || browsePrefix || "/"));
+    const entries = res.entries || [];
+    ul.innerHTML = "";
+    if (!entries.length) {
+      const empty = document.createElement("li");
+      empty.textContent = search ? "Keine Treffer." : "Dieser Ordner ist leer oder nicht in der Sicherung.";
+      empty.style.cursor = "default";
+      ul.appendChild(empty);
+      return;
+    }
+    entries.forEach((item) => {
+      const li = document.createElement("li");
+      const name = document.createElement("span");
+      name.className = "file-name";
+      name.textContent = item.name || item.path;
+      const meta = document.createElement("span");
+      meta.className = "file-meta";
+      const size = item.type === "file" ? fmtSize(item.size) : "";
+      meta.textContent = item.type === "dir" ? "Ordner" : (size ? "Datei · " + size : "Datei");
+      li.appendChild(name);
+      li.appendChild(meta);
+      li.dataset.path = item.path;
+      li.dataset.type = item.type;
+      if (item.path === selectedFilePath) li.classList.add("sel");
+      li.addEventListener("click", () => {
+        ul.querySelectorAll("li").forEach((n) => n.classList.remove("sel"));
+        li.classList.add("sel");
+        setSelectedFile(item.path, item.type === "dir");
+        if (item.type === "dir" && !search) {
+          browsePrefix = item.path;
+          loadSnapshotFiles({ prefix: item.path, search: "" });
+        }
       });
       ul.appendChild(li);
     });
   } catch (err) {
     ul.innerHTML = "";
-    setMsg("rst-err", err.message, true);
+    setMsg("file-err", err.message, true);
+  }
+}
+
+function applyRestoreJob(job) {
+  const fileBtn = document.getElementById("btn-file-restore");
+  const rstBtn = document.getElementById("btn-restore");
+  if (fileBtn) fileBtn.disabled = !!(job && job.running);
+  if (rstBtn) rstBtn.disabled = !!(job && job.running);
+  if (!job) return;
+  if (job.kind === "file-restore") {
+    if (job.running) {
+      setMsg("file-msg", "Datei wird geholt …", true);
+      setMsg("file-err", "", false);
+      return;
+    }
+    if (job.ok) {
+      const path = (job.result && job.result.restored_path) || "";
+      setMsg("file-msg", job.message || (path ? "Datei liegt unter " + path : "Fertig."), true);
+      setMsg("file-err", "", false);
+      const a = document.getElementById("file-download");
+      if (a && job.result && job.result.downloadable && path) {
+        a.hidden = false;
+        a.href = "/api/export-download?path=" + encodeURIComponent(path);
+        a.textContent = "Herunterladen";
+        if (job.result.name) a.setAttribute("download", job.result.name);
+      }
+    } else if (job.ok === false) {
+      setMsg("file-msg", "", false);
+      setMsg("file-err", job.message || "Holen fehlgeschlagen.", true);
+    }
+  }
+  if (job.kind === "restore" && !job.running && job.ok) {
+    setMsg("rst-msg", job.message || "Wiederherstellung abgeschlossen.", true);
+  }
+  if (job.kind === "restore" && !job.running && job.ok === false) {
+    setMsg("rst-err", job.message || "Wiederherstellung fehlgeschlagen.", true);
+  }
+}
+
+async function doFileRestore() {
+  setMsg("file-err", "", false);
+  setMsg("file-msg", "", false);
+  document.getElementById("file-download").hidden = true;
+  if (!selectedSnap) {
+    setMsg("file-err", "Bitte einen Sicherungspunkt wählen.", true);
+    return;
+  }
+  const path = (document.getElementById("file-path").value || selectedFilePath || "").trim();
+  if (!path) {
+    setMsg("file-err", "Bitte eine Datei oder einen Ordner wählen.", true);
+    return;
+  }
+  try {
+    await api("/api/restore-file", {
+      method: "POST",
+      body: JSON.stringify({
+        snapshot_id: selectedSnap,
+        path,
+        is_dir: selectedFileIsDir && path === selectedFilePath,
+      }),
+    });
+    setMsg("file-msg", "Datei wird geholt …", true);
+    pollStatus();
+  } catch (err) {
+    setMsg("file-err", err.message, true);
   }
 }
 
@@ -556,6 +742,35 @@ document.getElementById("btn-save-dest").addEventListener("click", saveDest);
 document.getElementById("btn-save-sched").addEventListener("click", saveSchedule);
 document.getElementById("btn-load-snaps").addEventListener("click", loadSnaps);
 document.getElementById("btn-restore").addEventListener("click", doRestore);
+document.getElementById("btn-file-restore").addEventListener("click", doFileRestore);
+document.getElementById("btn-file-search").addEventListener("click", () => {
+  loadSnapshotFiles({ search: document.getElementById("file-search").value.trim() });
+});
+document.getElementById("file-search").addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter") {
+    ev.preventDefault();
+    loadSnapshotFiles({ search: document.getElementById("file-search").value.trim() });
+  }
+});
+document.getElementById("btn-file-up").addEventListener("click", () => {
+  document.getElementById("file-search").value = "";
+  const cur = browsePrefix || ncDataDir || "";
+  if (!cur || cur === "/") return;
+  const parts = cur.replace(/\/+$/, "").split("/");
+  parts.pop();
+  browsePrefix = parts.join("/") || "/";
+  loadSnapshotFiles({ prefix: browsePrefix, search: "" });
+});
+document.getElementById("btn-file-home").addEventListener("click", () => {
+  document.getElementById("file-search").value = "";
+  browsePrefix = ncDataDir || "/";
+  loadSnapshotFiles({ prefix: browsePrefix, search: "" });
+});
+document.getElementById("file-path").addEventListener("input", () => {
+  const v = document.getElementById("file-path").value.trim();
+  if (v !== selectedFilePath) selectedFileIsDir = false;
+  selectedFilePath = v;
+});
 document.getElementById("btn-refresh-log").addEventListener("click", loadLog);
 
 boot();
