@@ -12,7 +12,14 @@ from nc_backup.detect import parse_dbhost
 from nc_backup.logutil import log
 from nc_backup.models import AppConfig, BackupMode
 from nc_backup.nextcloud import maintenance
-from nc_backup.restic_backend import SnapshotInfo, list_snapshots, restore_snapshot
+from nc_backup.restic_backend import (
+    SnapshotInfo,
+    SnapshotNode,
+    list_snapshot_paths,
+    list_snapshots,
+    restore_include_path,
+    restore_snapshot,
+)
 from nc_backup.runner import which
 
 
@@ -149,3 +156,28 @@ def get_snapshots(cfg: AppConfig) -> list[SnapshotInfo]:
     if cfg.destination.mode != BackupMode.INCREMENTAL:
         raise RuntimeError("Wiederherstellung nur für inkrementelle (Restic) Backups")
     return list_snapshots(cfg)
+
+
+def list_files_in_snapshot(
+    cfg: AppConfig,
+    snapshot_id: str,
+    *,
+    prefix: str = "",
+    search: str = "",
+) -> tuple[str, list[SnapshotNode]]:
+    if cfg.destination.mode != BackupMode.INCREMENTAL:
+        raise RuntimeError("Dateisuche nur für inkrementelle (Restic) Backups")
+    return list_snapshot_paths(cfg, snapshot_id, prefix=prefix, search=search)
+
+
+def run_file_restore(
+    cfg: AppConfig,
+    snapshot_id: str,
+    include_path: str,
+    *,
+    is_dir: bool = False,
+) -> Path:
+    """Einzelne Datei/Pfad nach /var/lib/nc-backup/exports — nicht in die Live-Nextcloud."""
+    if cfg.destination.mode != BackupMode.INCREMENTAL:
+        raise RuntimeError("Einzeldatei-Export nur für inkrementelle (Restic) Backups")
+    return restore_include_path(cfg, snapshot_id, include_path, is_dir=is_dir)

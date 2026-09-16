@@ -14,6 +14,7 @@
 | **Cloud/Netzwerk** | SFTP und S3 direkt über Restic; WebDAV/Rclone per Sync |
 | **Zeitplan** | systemd-Timer (z. B. täglich 02:30 Uhr) aus der Oberfläche aktivieren |
 | **Wiederherstellung** | Snapshots anzeigen und DB/Config/Daten selektiv zurückspielen |
+| **Einzeldatei holen** | Eine Datei aus einem Snapshot nach `/var/lib/nc-backup/exports` legen — die laufende Nextcloud bleibt unberührt |
 | **.deb-Paket** | Offizielle Installation für Ubuntu 24.04 und 26.04 LTS |
 
 ## Architektur
@@ -80,6 +81,13 @@ sudo apt install dpkg-dev debhelper dh-python python3-all python3-setuptools
 - **Aufbewahrung**: z. B. 7 tägliche, 4 wöchentliche, 6 monatliche Snapshots (`restic forget --prune`).
 
 Legacy-Modus **Vollbackup (tar.gz)** bleibt für einfache, dateibasierte Archive verfügbar.
+
+## Einzelne Datei aus einer Sicherung holen
+
+Auf der Web-Seite **Wiederherstellung** gibt es zwei getrennte Karten:
+
+1. **Einzelne Datei holen** — Sicherungspunkt wählen, im Snapshot browsen oder nach einem Namen suchen (z. B. ein Foto unter `…/Benutzer/files/Photos`). Die Datei wird mit `restic restore --include …` nach `/var/lib/nc-backup/exports/` geschrieben. Die laufende Nextcloud (Daten, Config, Datenbank) wird dabei **nicht** angefasst. Der genaue Pfad wird angezeigt; optional kann die Datei im Browser heruntergeladen werden. Anschließend selbst in Nextcloud hochladen oder per SCP kopieren.
+2. **Komplette Wiederherstellung** — überschreibt die Installation (weiterhin mit Warnung).
 
 ## Konfigurationsdateien
 

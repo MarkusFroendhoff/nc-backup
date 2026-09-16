@@ -6,6 +6,7 @@ import hmac
 import json
 import os
 import secrets as stdsecrets
+import shutil
 import subprocess
 import sys
 import threading
@@ -15,7 +16,7 @@ from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from nc_backup.secrets import (
     SECRET_ERROR_DE,
@@ -41,6 +42,7 @@ _JOB: dict[str, Any] = {
     "message": "",
     "started": None,
     "finished": None,
+    "result": None,
 }
 
 
@@ -307,16 +309,21 @@ def _run_job(kind: str, fn) -> None:
                 "message": "",
                 "started": datetime.now().isoformat(timespec="seconds"),
                 "finished": None,
+                "result": None,
             }
         )
 
     def worker() -> None:
         ok = False
         message = ""
+        extra: dict[str, Any] | None = None
         try:
             result = fn()
             if isinstance(result, tuple):
-                ok, message = bool(result[0]), str(result[1])
+                ok = bool(result[0])
+                message = str(result[1]) if len(result) > 1 else ""
+                if len(result) > 2 and isinstance(result[2], dict):
+                    extra = result[2]
             elif isinstance(result, int):
                 ok = result == 0
                 message = "Fertig." if ok else "Vorgang fehlgeschlagen."
@@ -326,6 +333,7 @@ def _run_job(kind: str, fn) -> None:
         except Exception as exc:
             ok = False
             message = str(exc)
+            extra = None
             _log_append("FEHLER: " + message)
             traceback.print_exc()
         with _JOB_LOCK:
@@ -335,6 +343,7 @@ def _run_job(kind: str, fn) -> None:
                     "ok": ok,
                     "message": message,
                     "finished": datetime.now().isoformat(timespec="seconds"),
+                    "result": extra,
                 }
             )
 
@@ -342,7 +351,7 @@ def _run_job(kind: str, fn) -> None:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "nc-backup-web/1.8"
+    server_version = "nc-backup-web/2.1"
 
     def log_message(self, fmt: str, *args: Any) -> None:
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
@@ -431,6 +440,9 @@ class Handler(BaseHTTPRequestHandler):
             if self._need_auth():
                 return
             try:
+                if path == "/api/export-download":
+                    self._send_export_download()
+                    return
                 self._api_get(path)
             except Exception as exc:
                 traceback.print_exc()
@@ -486,6 +498,34 @@ class Handler(BaseHTTPRequestHandler):
         data = candidate.read_bytes()
         extra = [("Cache-Control", "no-cache")]
         self._send(200, data, types.get(suffix, "application/octet-stream"), extra)
+
+    def _send_export_download(self) -> None:
+        from nc_backup.restic_backend import resolve_export_file
+
+        qs = parse_qs(urlparse(self.path).query)
+        raw = (qs.get("path") or [""])[0]
+        try:
+            path = resolve_export_file(raw)
+        except ValueError as exc:
+            self._json(400, {"ok": False, "error": str(exc)})
+            return
+        size = path.stat().st_size
+        ascii_name = path.name.encode("ascii", "replace").decode("ascii").replace('"', "_")
+        utf_name = quote(path.name, safe="")
+        disposition = (
+            f'attachment; filename="{ascii_name}"; filename*=UTF-8\'\'{utf_name}'
+        )
+        self.send_response(200)
+        self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Content-Disposition", disposition)
+        self.send_header("Content-Length", str(size))
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        with path.open("rb") as fh:
+            shutil.copyfileobj(fh, self.wfile, length=256 * 1024)
 
     def _api_login(self, body: dict[str, Any]) -> None:
         offered = str(body.get("token") or body.get("key") or body.get("password") or "")
@@ -584,18 +624,61 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/snapshots":
             try:
+                from nc_backup.restic_backend import export_root
                 from nc_backup.restore import get_snapshots
 
-                snaps = get_snapshots(load_config())
+                cfg = load_config()
+                snaps = get_snapshots(cfg)
                 self._json(
                     200,
                     {
                         "ok": True,
                         "snapshots": [s.__dict__ for s in snaps],
+                        "data_dir": cfg.nextcloud.data_dir,
+                        "export_root": str(export_root()),
                     },
                 )
             except Exception as exc:
                 self._json(400, {"ok": False, "error": str(exc), "snapshots": []})
+            return
+        if path == "/api/snapshot-ls":
+            qs = parse_qs(urlparse(self.path).query)
+            snap = (qs.get("snapshot_id") or qs.get("snapshot") or [""])[0].strip()
+            prefix = (qs.get("path") or qs.get("prefix") or [""])[0]
+            search = (qs.get("q") or qs.get("search") or [""])[0]
+            if not snap:
+                self._json(400, {"ok": False, "error": "Kein Sicherungspunkt gewählt."})
+                return
+            try:
+                from nc_backup.restic_backend import export_root, parent_snapshot_path
+                from nc_backup.restore import list_files_in_snapshot
+
+                cfg = load_config()
+                current, entries = list_files_in_snapshot(
+                    cfg, snap, prefix=prefix, search=search
+                )
+                self._json(
+                    200,
+                    {
+                        "ok": True,
+                        "path": current,
+                        "parent": parent_snapshot_path(current) if current else None,
+                        "data_dir": cfg.nextcloud.data_dir,
+                        "export_root": str(export_root()),
+                        "search": search.strip(),
+                        "entries": [
+                            {
+                                "path": n.path,
+                                "name": n.name,
+                                "type": n.type,
+                                "size": n.size,
+                            }
+                            for n in entries
+                        ],
+                    },
+                )
+            except Exception as exc:
+                self._json(400, {"ok": False, "error": str(exc), "entries": []})
             return
         if path == "/api/secret/new":
             self._json(200, {"ok": True, "secret": generate_secret()})
@@ -793,6 +876,50 @@ class Handler(BaseHTTPRequestHandler):
 
             _run_job("restore", _do_restore)
             self._json(200, {"ok": True, "message": "Wiederherstellung gestartet."})
+            return
+        if path == "/api/restore-file":
+            snap = str(body.get("snapshot_id") or body.get("snapshot") or "").strip()
+            include = str(body.get("path") or body.get("include") or "").strip()
+            is_dir = bool(body.get("is_dir") or body.get("directory") or False)
+            kind = str(body.get("type") or "").strip().lower()
+            if kind == "dir":
+                is_dir = True
+            if not snap:
+                self._json(400, {"ok": False, "error": "Kein Sicherungspunkt gewählt."})
+                return
+            if not include:
+                self._json(400, {"ok": False, "error": "Kein Dateipfad gewählt."})
+                return
+            with _JOB_LOCK:
+                if _JOB["running"]:
+                    self._json(409, {"ok": False, "error": "Es läuft bereits ein Vorgang."})
+                    return
+
+            def _do_file_restore():
+                from nc_backup.config_store import load_config as _load
+                from nc_backup.restore import run_file_restore
+
+                restored = run_file_restore(_load(), snap, include, is_dir=is_dir)
+                restored_s = str(restored)
+                downloadable = restored.is_file()
+                msg = (
+                    f"Datei liegt unter {restored_s}."
+                    if downloadable
+                    else f"Pfad liegt unter {restored_s}."
+                )
+                msg += " Die laufende Nextcloud wurde nicht verändert."
+                return (
+                    True,
+                    msg,
+                    {
+                        "restored_path": restored_s,
+                        "downloadable": downloadable,
+                        "name": restored.name,
+                    },
+                )
+
+            _run_job("file-restore", _do_file_restore)
+            self._json(200, {"ok": True, "message": "Datei wird geholt …"})
             return
         self._json(404, {"ok": False, "error": "Nicht gefunden."})
 

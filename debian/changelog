@@ -1,3 +1,14 @@
+nc-backup (2.1.0-1) noble; urgency=medium
+
+  * Web-UI: einzelne Datei oder einen kleinen Pfad aus einem
+    Restic-Snapshot nach /var/lib/nc-backup/exports holen, ohne die
+    laufende Nextcloud zu verändern. Neue API /api/snapshot-ls,
+    /api/restore-file und optionaler Download /api/export-download.
+    Die komplette Wiederherstellung bleibt unverändert und getrennt
+    gekennzeichnet.
+
+ -- Markus Fröndhoff <markus@froendhoff.com>  Wed, 16 Sep 2026 10:30:00 +0200
+
 nc-backup (2.0.3-1) noble; urgency=medium
 
   * Web-API: POST-Body [] (leeres PHP-Array der Nextcloud-App) wie {}
