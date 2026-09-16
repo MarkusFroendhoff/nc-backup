@@ -70,6 +70,15 @@ def _from_pyproject() -> tuple[str, str] | None:
     return match.group(1), REPO_URL
 
 
+def _cache_matches_install(raw: dict[str, Any]) -> bool:
+    """Cache gilt nur, wenn installed und update_available zur laufenden Version passen."""
+    if str(raw.get("installed") or "") != INSTALLED:
+        return False
+    latest = str(raw.get("latest") or "")
+    expected_available = bool(latest) and is_newer(latest, INSTALLED)
+    return bool(raw.get("update_available")) == expected_available
+
+
 def _load_cache() -> dict[str, Any] | None:
     path = _cache_path()
     try:
@@ -77,6 +86,8 @@ def _load_cache() -> dict[str, Any] | None:
     except (OSError, json.JSONDecodeError):
         return None
     if time.time() - float(raw.get("checked_at") or 0) > CACHE_TTL:
+        return None
+    if not _cache_matches_install(raw):
         return None
     return raw
 
