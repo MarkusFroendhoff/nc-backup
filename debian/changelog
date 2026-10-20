@@ -1,3 +1,18 @@
+nc-backup (2.1.2-1) noble; urgency=medium
+
+  * Nextcloud-App 1.3.4: Während eines Backups schaltet nc-backup
+    Nextcloud in den Wartungsmodus. Die Seite hat die HTTP-503-Antwort
+    (Kopfzeile X-Nextcloud-Maintenance-Mode) als
+    „Status konnte nicht geladen werden“ angezeigt und danach nicht
+    zuverlässig weitergefragt. Im Wartungsmodus steht jetzt
+    „Backup läuft – Nextcloud ist im Wartungsmodus“. Die Seite fragt
+    im Hintergrund weiter und lädt den Status von selbst, sobald der
+    Wartungsmodus aus ist. Echte Fehler (Dienst nicht erreichbar,
+    ungültiger Schlüssel) bleiben Fehler. API /api/backup, /api/status
+    und /api/targets unverändert.
+
+ -- Markus Fröndhoff <markus@froendhoff.com>  Tue, 20 Oct 2026 16:00:00 +0200
+
 nc-backup (2.1.1-1) noble; urgency=medium
 
   * Update-Cache: nach einem Paket-Upgrade die Sidebar-Version nicht

@@ -1,3 +1,71 @@
+(function (root, factory) {
+	var api = factory();
+	if (typeof module === 'object' && module.exports) {
+		module.exports = api;
+	}
+	if (root) {
+		root.NcbackupStatus = api;
+	}
+})(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this, function () {
+	// Nextcloud's checkMaintenanceMode() answers app routes with HTTP 503,
+	// header X-Nextcloud-Maintenance-Mode: 1, and an HTML page (not our JSON).
+	function isMaintenanceResponse(status, headerValue, data) {
+		var headerOn = headerValue === true || String(headerValue == null ? '' : headerValue).trim() === '1';
+		if (headerOn) {
+			return true;
+		}
+		if (status !== 503) {
+			return false;
+		}
+		if (!data || typeof data !== 'object') {
+			return true;
+		}
+		if (data.ok === false && (data.message || data.error)) {
+			return false;
+		}
+		return !data.message && !data.error;
+	}
+
+	// 'poll' starts the background retry, 'keep' leaves an existing one alone,
+	// 'idle' stops it. Real errors must not start a loop by themselves.
+	function nextPollAction(event, polling) {
+		if (event.maintenance) {
+			return 'poll';
+		}
+		if (event.transportError || !event.ok || !event.data || event.data.ok === false) {
+			return polling ? 'keep' : 'idle';
+		}
+		if (event.data.running) {
+			return 'poll';
+		}
+		return 'idle';
+	}
+
+	function interpretStatusResult(seq, currentSeq, result, polling) {
+		if (seq !== currentSeq) {
+			return { ignore: true, action: 'keep', maintenance: false };
+		}
+		var maintenance = !!(result && result.maintenance);
+		return {
+			ignore: false,
+			maintenance: maintenance,
+			action: nextPollAction({
+				maintenance: maintenance,
+				transportError: !!(result && result.transportError),
+				ok: result ? result.ok : false,
+				data: result ? result.data : null,
+			}, polling),
+		};
+	}
+
+	return {
+		isMaintenanceResponse: isMaintenanceResponse,
+		nextPollAction: nextPollAction,
+		interpretStatusResult: interpretStatusResult,
+	};
+});
+
+if (typeof document !== 'undefined') {
 document.addEventListener('DOMContentLoaded', function () {
 	// Nextcloud content area often has overflow:hidden — enable scrolling for this app.
 	(function enableAppScroll() {
@@ -42,7 +110,13 @@ document.addEventListener('DOMContentLoaded', function () {
 		return;
 	}
 
+	const isMaintenanceResponse = NcbackupStatus.isMaintenanceResponse;
+	const interpretStatusResult = NcbackupStatus.interpretStatusResult;
+
 	let pollTimer = null;
+	let statusSeq = 0;
+	let targetsSeq = 0;
+	let targetsNeedReload = false;
 
 	function headers() {
 		return {
@@ -54,12 +128,28 @@ document.addEventListener('DOMContentLoaded', function () {
 	}
 
 	function request(url, options) {
-		return fetch(url, Object.assign({ credentials: 'same-origin', headers: headers() }, options))
+		return fetch(url, Object.assign({
+			credentials: 'same-origin',
+			cache: 'no-store',
+			headers: headers(),
+		}, options))
 			.then(function (response) {
+				const status = response.status;
+				const headerValue = response.headers.get('X-Nextcloud-Maintenance-Mode');
 				return response.json().then(function (data) {
-					return { ok: response.ok, data: data };
+					return {
+						ok: response.ok,
+						status: status,
+						maintenance: isMaintenanceResponse(status, headerValue, data),
+						data: data,
+					};
 				}).catch(function () {
-					return { ok: response.ok, data: {} };
+					return {
+						ok: response.ok,
+						status: status,
+						maintenance: isMaintenanceResponse(status, headerValue, {}),
+						data: {},
+					};
 				});
 			});
 	}
@@ -72,8 +162,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	function setBar(percent) {
 		if (barEl) {
+			barEl.classList.remove('ncbackup-indeterminate');
 			barEl.style.width = Math.max(0, Math.min(100, percent || 0)) + '%';
 		}
+	}
+
+	function setMaintenanceBar(active) {
+		if (!barEl) {
+			return;
+		}
+		if (active) {
+			barEl.classList.add('ncbackup-indeterminate');
+			return;
+		}
+		barEl.classList.remove('ncbackup-indeterminate');
 	}
 
 	function errMessage(data, fallback) {
@@ -194,31 +296,88 @@ document.addEventListener('DOMContentLoaded', function () {
 		}
 	}
 
+	function ensurePolling() {
+		if (!pollTimer) {
+			pollTimer = setInterval(pollStatus, 2000);
+		}
+	}
+
+	function stopPolling() {
+		if (!pollTimer) {
+			return;
+		}
+		clearInterval(pollTimer);
+		pollTimer = null;
+	}
+
+	function applyPollAction(action) {
+		if (action === 'poll') {
+			ensurePolling();
+			return;
+		}
+		if (action === 'idle') {
+			stopPolling();
+		}
+	}
+
+	function showMaintenance() {
+		targetsNeedReload = true;
+		setMaintenanceBar(true);
+		show(t('ncbackup', 'Backup is running — Nextcloud is in maintenance mode.'));
+		ensurePolling();
+	}
+
 	function pollStatus() {
+		const seq = ++statusSeq;
 		request(OC.generateUrl('/apps/ncbackup/status'), { method: 'GET' })
 			.then(function (result) {
-				if (!result.data) {
+				// A 503 that was in flight while maintenance ended must not
+				// overwrite the status we already recovered, or stop the loop.
+				const decision = interpretStatusResult(seq, statusSeq, result, !!pollTimer);
+				if (decision.ignore) {
 					return;
 				}
-				if (!result.ok || result.data.ok === false) {
+				if (decision.maintenance) {
+					showMaintenance();
+					applyPollAction(decision.action);
+					return;
+				}
+				setMaintenanceBar(false);
+				if (!result.data || !result.ok || result.data.ok === false) {
 					show(errMessage(result.data, t('ncbackup', 'Could not load status.')));
+					applyPollAction(decision.action);
 					return;
 				}
 				applyMeta(result.data);
 				show(formatStatus(result.data));
-				if (!result.data.running && pollTimer) {
-					clearInterval(pollTimer);
-					pollTimer = null;
+				if (targetsNeedReload) {
+					targetsNeedReload = false;
+					loadTargets();
 				}
+				applyPollAction(decision.action);
 			})
 			.catch(function (err) {
+				const decision = interpretStatusResult(seq, statusSeq, { transportError: true }, !!pollTimer);
+				if (decision.ignore) {
+					return;
+				}
+				setMaintenanceBar(false);
 				show(String(err));
+				applyPollAction(decision.action);
 			});
 	}
 
-	function refresh() {
+	function loadTargets() {
+		const seq = ++targetsSeq;
 		request(OC.generateUrl('/apps/ncbackup/targets'), { method: 'GET' })
 			.then(function (result) {
+				if (seq !== targetsSeq) {
+					return;
+				}
+				if (result.maintenance) {
+					showMaintenance();
+					return;
+				}
 				if (!result.ok || (result.data && result.data.ok === false)) {
 					show(errMessage(result.data, t('ncbackup', 'Could not load targets.')));
 					return;
@@ -226,8 +385,15 @@ document.addEventListener('DOMContentLoaded', function () {
 				fillTargets(result.data || {});
 			})
 			.catch(function (err) {
+				if (seq !== targetsSeq) {
+					return;
+				}
 				show(String(err));
 			});
+	}
+
+	function refresh() {
+		loadTargets();
 		pollStatus();
 	}
 
@@ -256,6 +422,10 @@ document.addEventListener('DOMContentLoaded', function () {
 				body: JSON.stringify({ local_path: path }),
 			}).then(function (result) {
 				saveDestBtn.disabled = false;
+				if (result.maintenance) {
+					showMaintenance();
+					return;
+				}
 				if (!result.ok || (result.data && result.data.ok === false)) {
 					show(errMessage(result.data, t('ncbackup', 'Could not save destination.')));
 					return;
@@ -282,6 +452,10 @@ document.addEventListener('DOMContentLoaded', function () {
 				body: JSON.stringify({ enabled: enabled, on_calendar: time }),
 			}).then(function (result) {
 				saveSchedBtn.disabled = false;
+				if (result.maintenance) {
+					showMaintenance();
+					return;
+				}
 				if (!result.ok || (result.data && result.data.ok === false)) {
 					show(errMessage(result.data, t('ncbackup', 'Could not save schedule.')));
 					return;
@@ -304,15 +478,16 @@ document.addEventListener('DOMContentLoaded', function () {
 			body: '{}',
 		}).then(function (result) {
 			startBtn.disabled = false;
+			if (result.maintenance) {
+				showMaintenance();
+				return;
+			}
 			if (!result.ok || (result.data && result.data.ok === false)) {
 				show(errMessage(result.data, t('ncbackup', 'Could not start backup.')));
 				return;
 			}
 			show(errMessage(result.data, t('ncbackup', 'Backup started.')));
-			if (pollTimer) {
-				clearInterval(pollTimer);
-			}
-			pollTimer = setInterval(pollStatus, 2000);
+			ensurePolling();
 			pollStatus();
 		}).catch(function (err) {
 			startBtn.disabled = false;
@@ -322,3 +497,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	refresh();
 });
+}

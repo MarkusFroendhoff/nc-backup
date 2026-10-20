@@ -50,7 +50,8 @@ OC.L10N.register(
 		"Not ready" : "Nicht bereit",
 		"Starting backup…" : "Backup wird gestartet…",
 		"Could not start backup." : "Backup konnte nicht gestartet werden.",
-		"Backup started." : "Backup gestartet."
+		"Backup started." : "Backup gestartet.",
+		"Backup is running — Nextcloud is in maintenance mode." : "Backup läuft – Nextcloud ist im Wartungsmodus."
 	},
 	"nplurals=2; plural=(n != 1);"
 );

@@ -138,6 +138,24 @@ body.noscroll #content.app-ncbackup {
 	transition: width 0.25s;
 }
 
+#ncbackup-bar.ncbackup-indeterminate {
+	width: 35% !important;
+	animation: ncbackup-indet 1.3s ease-in-out infinite;
+}
+
+@keyframes ncbackup-indet {
+	0% { transform: translateX(-130%); }
+	100% { transform: translateX(340%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#ncbackup-bar.ncbackup-indeterminate {
+		animation: none;
+		width: 50% !important;
+		transform: none;
+	}
+}
+
 .ncbackup-log,
 #ncbackup-log {
 	background: var(--color-background-dark);
